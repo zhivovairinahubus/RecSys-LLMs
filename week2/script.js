@@ -117,23 +117,11 @@ function getRecommendations() {
                     cosine
                 );
 
-                // Step 5: Build the result text
-                const lines = [
-                    `Because you liked "${likedMovie.displayTitle}" ${formatGenres(likedMovie.genres)}:`
-                ];
+                // Step 5: Build the result text (titles only, no scores)
+                const lines = [`Because you liked "${likedMovie.displayTitle}":`];
                 top.forEach((movie, index) => {
-                    const score = movie.score === null ? 'n/a' : movie.score.toFixed(3);
-                    lines.push(`${index + 1}. ${movie.displayTitle} ${formatGenres(movie.genres)} — cosine: ${score}`);
+                    lines.push(`${index + 1}. ${movie.displayTitle}`);
                 });
-
-                if (top.length > 0) {
-                    const kth = top[top.length - 1].score;
-                    const inTop = kth === null ? 0 : top.filter(m => m.score === kth).length;
-                    const extra = Math.max(0, tiesAtK - inTop);
-                    if (extra > 0) {
-                        lines.push(`... and ${extra} more with the same score.`);
-                    }
-                }
 
                 resultElement.textContent = lines.join('\n');
                 resultElement.className = 'success';
@@ -194,38 +182,11 @@ function getProfileRecommendations() {
         const excludedTitleKeys = new Set(distinct.map(movie => movie.titleKey));
         const { top, tiesAtK } = rankCandidates(profile, movies, excludedTitleKeys, 5, cosine);
 
-        // Step 5: Build the result text
-        const lines = [];
-
-        // Profile vector as "Genre: weight" for the non-zero components
-        const weights = [];
-        realGenreNames.forEach((name, index) => {
-            if (profile[index] !== 0) {
-                weights.push(`${name}: ${profile[index].toFixed(2)}`);
-            }
-        });
-        lines.push('Profile vector: ' + (weights.length > 0 ? weights.join(', ') : '(empty)'));
-
-        lines.push('Watched movies (cosine with profile):');
-        distinct.forEach(movie => {
-            const score = cosine(profile, movie.genreVector);
-            lines.push(`  - ${movie.displayTitle}: ${score === null ? 'n/a' : score.toFixed(3)}`);
-        });
-
-        lines.push('Top-5 recommendations:');
+        // Step 5: Build the result text (titles only, no profile vector or scores)
+        const lines = ['Recommended for you:'];
         top.forEach((movie, index) => {
-            const score = movie.score === null ? 'n/a' : movie.score.toFixed(3);
-            lines.push(`${index + 1}. ${movie.displayTitle} ${formatGenres(movie.genres)} — cosine: ${score}`);
+            lines.push(`${index + 1}. ${movie.displayTitle}`);
         });
-
-        if (top.length > 0) {
-            const kth = top[top.length - 1].score;
-            const inTop = kth === null ? 0 : top.filter(m => m.score === kth).length;
-            const extra = Math.max(0, tiesAtK - inTop);
-            if (extra > 0) {
-                lines.push(`... and ${extra} more with the same score.`);
-            }
-        }
 
         resultElement.textContent = lines.join('\n');
         resultElement.className = 'success';
