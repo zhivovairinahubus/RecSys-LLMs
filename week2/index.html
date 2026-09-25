@@ -5,25 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content-Based Movie Recommender</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        #result, #profile-result { white-space: pre-line; }
+        h2 {
+            color: #2c3e50;
+            margin: 25px 0 10px;
+            font-size: 20px;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 20px;
+        }
+        .profile-select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+        .profile-select:focus { border-color: #3498db; outline: none; }
+        #profile-btn {
+            padding: 12px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #profile-btn:hover { background-color: #27ae60; }
+        #profile-result-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #2ecc71;
+        }
+        #profile-result {
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: left;
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Content-Based Movie Recommender</h1>
+
+        <h2>Item-to-item recommendations</h2>
         <p>Select a movie you like, and we'll find similar ones for you!</p>
-        
         <div class="controls">
             <select id="movie-select">
                 <option value="" disabled selected>Select a movie</option>
             </select>
             <button id="recommend-btn" onclick="getRecommendations()">Get Recommendations</button>
         </div>
-        
         <div id="result-box">
             <p id="result">Please wait, loading data...</p>
+        </div>
+
+        <h2>Profile-based recommendations</h2>
+        <p>Select up to three movies you watched, and we'll find similar ones for you!</p>
+        <div class="controls">
+            <select id="watched-select-1" class="profile-select">
+                <option value="" disabled selected>Watched movie 1</option>
+            </select>
+            <select id="watched-select-2" class="profile-select">
+                <option value="" disabled selected>Watched movie 2</option>
+            </select>
+            <select id="watched-select-3" class="profile-select">
+                <option value="" disabled selected>Watched movie 3</option>
+            </select>
+            <button id="profile-btn" onclick="getProfileRecommendations()">Recommend from profile</button>
+        </div>
+        <div id="profile-result-box">
+            <p id="profile-result">Select up to three movies to build a profile.</p>
         </div>
     </div>
 
     <script src="data.js"></script>
+    <script src="cbf-core.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
