@@ -342,14 +342,23 @@ async function main() {
         pairs.push([a, b]);
     }
 
-    // стратегия (б) требует среднего пользователя по всем фильмам
-    const userMean = new Array(numUsers + 1).fill(0);
+    // Стратегия (б) требует среднего пользователя. Среднее считается только по
+    // реальным фильмам (canonicalIds), как и всё остальное: у 18 столбцов-копий
+    // оценок нет вовсе, а у столбца 267 они были бы вычеркнуты, так что
+    // включение их в среднее лишь раздувало бы его нулём.
+    const userMeanReal = new Array(numUsers + 1).fill(0);
+    // Прежняя версия — по всем numMovies столбцам. Оставлена, чтобы показать
+    // в отчёте, что правка на результат стратегии (б) не влияет.
+    const userMeanAll = new Array(numUsers + 1).fill(0);
     {
         const Mx = M();
         for (let u = 1; u <= numUsers; u++) {
-            let s = 0, c = 0;
-            for (let m = 1; m <= numMovies; m++) if (Mx[u][m] !== 0) { s += Mx[u][m]; c++; }
-            userMean[u] = c ? s / c : 0;
+            let sReal = 0, cReal = 0;
+            for (const m of canonicalIds) if (Mx[u][m] !== 0) { sReal += Mx[u][m]; cReal++; }
+            userMeanReal[u] = cReal ? sReal / cReal : 0;
+            let sAll = 0, cAll = 0;
+            for (let m = 1; m <= numMovies; m++) if (Mx[u][m] !== 0) { sAll += Mx[u][m]; cAll++; }
+            userMeanAll[u] = cAll ? sAll / cAll : 0;
         }
     }
 
@@ -366,8 +375,23 @@ async function main() {
     }
 
     function cosineMeanImputed(a, b) {
-        // (б) пропуски заполнены средней оценкой пользователя по всем фильмам
-        const Mx = M(), ra = Mx[a], rb = Mx[b], ma = userMean[a], mb = userMean[b];
+        // (б) пропуски заполнены средней оценкой пользователя. Цикл идёт по
+        // canonicalIds: копии дубликатов и невалидная строка 267 не являются
+        // фильмами и не должны входить в скалярное произведение.
+        const Mx = M(), ra = Mx[a], rb = Mx[b], ma = userMeanReal[a], mb = userMeanReal[b];
+        let dot = 0, na = 0, nb = 0;
+        for (const m of canonicalIds) {
+            const x = ra[m] !== 0 ? ra[m] : ma;
+            const y = rb[m] !== 0 ? rb[m] : mb;
+            dot += x * y; na += x * x; nb += y * y;
+        }
+        return na === 0 || nb === 0 ? 0 : dot / Math.sqrt(na * nb);
+    }
+
+    // Было: те же пропуски, но заполненные по всем numMovies столбцам, включая
+    // 18 пустых столбцов-копий и столбец 267.
+    function cosineMeanImputedAllColumns(a, b) {
+        const Mx = M(), ra = Mx[a], rb = Mx[b], ma = userMeanAll[a], mb = userMeanAll[b];
         let dot = 0, na = 0, nb = 0;
         for (let m = 1; m <= numMovies; m++) {
             const x = ra[m] !== 0 ? ra[m] : ma;
@@ -406,6 +430,53 @@ async function main() {
             `${spearman(sims, commonAll).toFixed(4).padStart(10)}${(f1(elapsed) + ' мс').padStart(11)}`);
     }
     function f1(x) { return x.toFixed(1); }
+
+    // --- правка: стратегия (б) считалась по всем 1682 столбцам ------------------
+    // Прежний вариант (б) и новый рядом, на одних и тех же 10000 парах.
+    console.log('\n  --- (б) ДО правки: среднее и скалярное произведение по всем ' +
+        numMovies + ' столбцам, включая 18 пустых столбцов-копий и столбец 267 ---');
+    const simsImputedOld = new Array(PAIR_COUNT);
+    {
+        const t0 = process.hrtime.bigint();
+        for (let i = 0; i < PAIR_COUNT; i++) simsImputedOld[i] = cosineMeanImputedAllColumns(pairs[i][0], pairs[i][1]);
+        const elapsed = ms(t0);
+        const hi = simsImputedOld.filter(v => v >= 0.99).length;
+        console.log(`  ${'(б) ДО: все ' + numMovies + ' столбцов'.padEnd(30)}${f4(mean(simsImputedOld)).padStart(9)}` +
+            `${f4(Math.min(...simsImputedOld)).padStart(9)}${f4(Math.max(...simsImputedOld)).padStart(9)}` +
+            `${(f2(100 * hi / PAIR_COUNT) + '%').padStart(12)}` +
+            `${spearman(simsImputedOld, commonAll).toFixed(4).padStart(10)}${(f1(elapsed) + ' мс').padStart(11)}`);
+    }
+    const simsImputedNew = new Array(PAIR_COUNT);
+    for (let i = 0; i < PAIR_COUNT; i++) simsImputedNew[i] = cosineMeanImputed(pairs[i][0], pairs[i][1]);
+    const hiNew = simsImputedNew.filter(v => v >= 0.99).length;
+    console.log(`  ${'(б) ПОСЛЕ: ' + canonicalCount + ' реальных фильмов'.padEnd(30)}${f4(mean(simsImputedNew)).padStart(9)}` +
+        `${f4(Math.min(...simsImputedNew)).padStart(9)}${f4(Math.max(...simsImputedNew)).padStart(9)}` +
+        `${(f2(100 * hiNew / PAIR_COUNT) + '%').padStart(12)}` +
+        `${spearman(simsImputedNew, commonAll).toFixed(4).padStart(10)}` +
+        `${''.padStart(11)}   <- та же строка, что "(б) заполнение пропусков средней" выше`);
+    console.log(`  колонок в цикле: было ${numMovies}, стало ${canonicalCount} ` +
+        `(исключено ${duplicateIds.length} копий и ${invalidIds.length} невалидных)`);
+    let maxDiff = 0;
+    for (let i = 0; i < PAIR_COUNT; i++) maxDiff = Math.max(maxDiff, Math.abs(simsImputedOld[i] - simsImputedNew[i]));
+    console.log(`  макс. изменение сходства между ДО и ПОСЛЕ: ${maxDiff.toExponential(3)} ` +
+        `(средние по реальным фильмам и по всем столбцам совпадают: ` +
+        `${userMeanReal.every((v, i) => i === 0 || Math.abs(v - userMeanAll[i]) < 1e-12)})`);
+
+    // Значения всех трёх стратегий на конкретных парах — чтобы правку (б) можно
+    // было проверить вручную, а не только по агрегатам.
+    console.log('\n  --- значения стратегий на конкретных парах ---');
+    const REPORTER = [['19 и 37', 19, 37], ['19 и 13', 19, 13]];
+    const rowPad = 12;
+    console.log(`  ${'пара'.padEnd(rowPad)}${'(а) общие'.padStart(13)}${'(б) ДО'.padStart(13)}` +
+        `${'(б) ПОСЛЕ'.padStart(13)}${'(в) min(n,50)/50'.padStart(18)}`);
+    for (const [label, a, b] of REPORTER) {
+        console.log(`  ${label.padEnd(rowPad)}${cosineCoRatedOnly(a, b).toFixed(6).padStart(13)}` +
+            `${cosineMeanImputedAllColumns(a, b).toFixed(6).padStart(13)}` +
+            `${cosineMeanImputed(a, b).toFixed(6).padStart(13)}` +
+            `${cosUsers(a, b).similarity.toFixed(6).padStart(16)}`);
+    }
+    console.log(`  (а) — сырой косинус по совместным оценкам, без взвешивания;`);
+    console.log(`  (в) — то, что считает приложение: сырой косинус × min(общих, 50) / 50.`);
 
     console.log(`\n  Спирмен посчитан по всем ${PAIR_COUNT} парам. Для справки — по подмножеству пар`);
     console.log('  с ненулевым пересечением (иначе сходство почти везде 0 и рангов мало):');

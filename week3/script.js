@@ -541,10 +541,15 @@ async function getRecommendations() {
         setExplanationVisible(true);
 
         renderList('user-based-result', userBased,
-            'Because viewers with similar taste rated these highly, we recommend:');
+            'Because viewers with similar taste rated these highly, we recommend:',
+            null,
+            'Not enough evidence for a reliable recommendation: too few of the most ' +
+            'similar users have rated the same movie.');
         renderList('item-based-result', itemBased,
             'Because you liked …, we recommend:',
-            liked.map(movie => displayTitleOf(movie.movieId)));
+            liked.map(movie => displayTitleOf(movie.movieId)),
+            'Not enough evidence for a reliable recommendation: too few of the movies ' +
+            'you rated are similar enough to the rest of the catalogue.');
     } finally {
         setCalculating(false);
     }
@@ -577,14 +582,16 @@ function setExplanationVisible(isVisible) {
 // `heading` is the line printed above the entries. For the item-based column it
 // contains a "…" where the three films the user liked best belong; `likedTitles`
 // fills that gap. `items` decides whether a list or an explanation is shown.
-function renderList(elementId, items, heading, likedTitles) {
+//
+// `emptyMessage` is column-specific on purpose: an empty user-based list and an
+// empty item-based list have different causes, so they must not share wording.
+// It is NOT the same text as "please select a user" — that is a UI state, this
+// is a computed result.
+function renderList(elementId, items, heading, likedTitles, emptyMessage) {
     const el = document.getElementById(elementId);
 
     if (!items || items.length === 0) {
-        renderMessage(elementId,
-            'This user does not have enough ratings for a reliable prediction. ' +
-            'A recommendation needs at least a few films rated, so that other ' +
-            'users have something in common with them.');
+        renderMessage(elementId, emptyMessage);
         return;
     }
 
@@ -605,5 +612,13 @@ function renderList(elementId, items, heading, likedTitles) {
             `${Number(item.score).toFixed(3)} out of 5</li>`)
         .join('');
     html += `<ul>${entries}</ul>`;
+
+    // A short list is still a list, so the entries stay — but say so, because a
+    // single recommendation out of 1663 films is a weak result and the reader
+    // should not have to infer that from the length alone.
+    if (items.length < 5) {
+        html += `<p class="short-list-note">Only ${items.length} ` +
+            `${items.length === 1 ? 'movie has' : 'movies have'} enough evidence.</p>`;
+    }
     el.innerHTML = html;
 }

@@ -115,6 +115,15 @@ p {
     margin-bottom: 8px;
 }
 
+/* "Only 1 movie has enough evidence." under a short list. */
+.short-list-note {
+    margin-top: 8px;
+    margin-bottom: 0;
+    color: #5d6d7e;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
 #result-box {
     display: grid;
     grid-template-columns: 1fr 1fr;

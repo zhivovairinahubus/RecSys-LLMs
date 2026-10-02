@@ -207,6 +207,7 @@ async function main() {
 
     function userBasedCandidates(userId, nbrs) {
         const out = [];
+        const rejected = [];
         let before = 0;
         for (let m = 1; m <= numMovies; m++) {
             if (isCopy(m)) continue;
@@ -220,11 +221,20 @@ async function main() {
             }
             if (voters === 0) continue;
             before++;
-            if (evidence < THR) continue;
+            if (evidence < THR) {
+                // Keep the strongest ones by sum of weights: a candidate rejected
+                // on evidence is still interesting, because a high sum of
+                // neighbour weights with low evidence is exactly the case where
+                // the weights themselves are small.
+                rejected.push({ movieId: m, simSum: den, voters, evidence });
+                continue;
+            }
             out.push({ movieId: m, score: num / den, voters, evidence });
         }
         out.sort((a, b) => b.score - a.score);
         out.доПорога = before;
+        rejected.sort((a, b) => b.simSum - a.simSum);
+        out.отсеяно = rejected;
         return out;
     }
 
@@ -379,7 +389,11 @@ async function main() {
     console.log('    названий у 2 фильмов: ' + ambiguousTitles.length +
         '  -> это ровно те же группы копий, теперь с оценками в одном столбце');
 
-    for (const userId of [1, 7, minRatedId]) {
+    // 34 and 242 join 1, 7 and 19. Both have 20 ratings like 19, but neither
+    // gets a full user-based list: 34 only clears the threshold for one movie
+    // and 242 for none, which is what the rejected-candidate block below shows.
+    const REPORT_USERS = [1, 7, minRatedId, 34, 242];
+    for (const userId of REPORT_USERS) {
         const label = userId === minRatedId
             ? `user ${userId}  (наименьший id среди ${count20} пользователей ровно с 20 оценками)`
             : `user ${userId}`;
@@ -428,6 +442,32 @@ async function main() {
                 f2(cand ? cand.evidence : NaN).padStart(12) +
                 String(perMovie[id] || 0).padStart(9) +
                 '  ' + id);
+        }
+
+        // What the threshold actually removed, and whether the neighbour pool could
+        // ever have cleared it: the ceiling is the sum of the evidence weights
+        // of all 20 neighbours, so if that sum is below THR no candidate can
+        // pass no matter how many of them rated the movie.
+        const evidenceCeiling = nbrs.reduce((s, nb) => s + ev(nb.common), 0);
+        console.log('\n  --- user-based: что отсеял порог ---');
+        console.log('    сумма весов всех 20 соседей (потолок evidence): ' + f2(evidenceCeiling) +
+            '   порог: ' + THR + '   ' +
+            (evidenceCeiling < THR ? 'ПОТОЛКА НЕ ХВАТАЕТ: ни один кандидат не может пройти'
+                                   : 'потолка хватает, но не каждый набор соседей дотягивает'));
+        console.log('    три кандидата с наибольшей суммой весов, отсечённых по evidence:');
+        console.log('    ' + 'название'.padEnd(38) + 'суммаВесов'.padStart(12) + 'соседей'.padStart(9) + 'evidence'.padStart(11));
+        const rejected = ubMine.отсеяно || [];
+        if (rejected.length === 0) {
+            console.log('    (отсеянных кандидатов нет)');
+        } else {
+            for (const rej of rejected.slice(0, 3)) {
+                console.log('    ' + short(titleById[rej.movieId], 38).padEnd(38) +
+                    f2(rej.simSum).padStart(12) +
+                    String(rej.voters).padStart(9) +
+                    f2(rej.evidence).padStart(11) +
+                    '  ' + rej.movieId);
+            }
+            console.log('    всего отсеяно по evidence: ' + rejected.length);
         }
 
         const t1 = process.hrtime.bigint();
@@ -498,8 +538,15 @@ async function main() {
         // ---------------------------------------------------------------
         const base = BASELINE[userId];
         console.log('\n  --- сверка с эталоном (снят ДО оптимизации и ДО слияния дубликатов) ---');
-        console.log('    прежние значения сохранены без изменений; рядом показан текущий результат.');
-        for (const [meth, ru, list] of [['userBased', 'user-based', ubReturned], ['itemBased', 'item-based', ibReturned]]) {
+        if (!base) {
+            // Эталон снимался только для 1, 7 и 19. Для 34 и 242 сравнивать
+            // не с чем — эталонных значений по ним просто не существует.
+            console.log('    эталонных значений для этого пользователя нет (эталон снят для 1, 7 и 19),');
+            console.log('    сверка не выполняется; выше показан текущий результат.');
+        }
+        for (const [meth, ru, list] of base
+            ? [['userBased', 'user-based', ubReturned], ['itemBased', 'item-based', ibReturned]]
+            : []) {
             const expect = base[meth];
             let changed = 0;
             console.log('    ' + ru + ':');
