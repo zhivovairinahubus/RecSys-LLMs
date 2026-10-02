@@ -543,8 +543,8 @@ async function getRecommendations() {
         renderList('user-based-result', userBased,
             'Because viewers with similar taste rated these highly, we recommend:',
             null,
-            'Not enough evidence for a reliable recommendation: too few of the most ' +
-            'similar users have rated the same movie.');
+            'Not enough evidence for a reliable recommendation: the most ' +
+            'similar users share too few rated movies with this user.');
         renderList('item-based-result', itemBased,
             'Because you liked …, we recommend:',
             liked.map(movie => displayTitleOf(movie.movieId)),
