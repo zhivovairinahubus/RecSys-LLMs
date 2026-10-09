@@ -11,9 +11,9 @@
 
 By the end of this assignment you should be able to:
 
-- Turn a raw retail transaction log into **item counts** and **pairwise
-  co-occurrence counts**, and explain why those counts are all that
-  association-rule mining needs.
+- Turn a raw retail transaction log into **support counts for items and itemsets
+  of any size** — singles, pairs, triples, and larger — and explain why those
+  counts are all that association-rule mining needs.
 - Compute **support**, **confidence**, and **lift** for a rule, and explain what
   each metric does and does not measure.
 - Implement **Apriori** (or an equivalent frequent-itemset miner) using the
@@ -49,13 +49,16 @@ direction (B → A)** compares `A → B` with `B → A`.
   - Raw download: `https://archive.ics.uci.edu/static/public/352/online+retail.zip`
   - Original workbook sha256:
     `43465a06f2ccf7c8b5bd2892bc7defb52f97487934fe93b16ae4c3936424676d`
-- **Citation** (as required by the source): Daqing Chen, Sai Liang Sain, and Kun
+- **Citation** (as required by the source): Daqing Chen, Sai Laing Sain, and Kun
   Guo, "Data mining for the online retail industry: A case study of RFM
-  model-based customer segmentation using data mining", *Journal of Cases on
-  Information Technology*, 2012.
+  model-based customer segmentation using data mining", *Journal of Database
+  Marketing & Customer Strategy Management*, vol. 19, no. 3, pp. 197–208, 2012.
+  DOI: [10.1057/dbm.2012.17](https://doi.org/10.1057/dbm.2012.17).
 - **Cleaning summary** (performed by `tools/build_week4_data.py`, a one-off
   generator that is **not** part of this assignment):
-  - 541,909 raw rows → **384,911 kept rows**, **17,080 baskets**, **3,653 distinct items**.
+  - 541,909 raw rows → **386,233 unique (InvoiceNo, StockCode) pairs** after
+    merging duplicate rows → **384,911 pairs** after dropping baskets with a
+    single distinct item, forming **17,080 baskets** and **3,653 distinct items**.
   - Rows removed: cancellations (`InvoiceNo` starting with `C`) and adjustments
     (`A`), non-positive `Quantity`, non-positive `UnitPrice`, blank `Description`,
     guest checkouts (blank `CustomerID`), and non-product codes (postage,
@@ -77,7 +80,8 @@ direction (B → A)** compares `A → B` with `B → A`.
 
 ### 4.1 Implementation Task
 
-Implement the seven `TODO(hw4)` stubs in `week4/script.js`:
+Implement the seven `TODO(hw4)` stubs in `week4/script.js` (eight requirements
+listed below; items 6–8 describe page behaviour, not stubs):
 
 1. **Basket construction.** Build an invoice–item basket matrix: implement
    `dedupeBasket(rawItems)` so a repeated item in a raw basket is counted once (a
@@ -118,13 +122,18 @@ Answer in the course report (see §7), using numbers produced by your own code:
    would take (cross-sell, bundle, recommendation slot) and why the lift — not the
    confidence alone — supports it.
 2. **One misleading or weak rule.** Report a rule that looks strong on confidence
-   but is weak or vacuous: for example, a very high-confidence rule whose **lift is
-   close to 1**, or a rule whose antecedent is so frequent that the rule is trivially
-   satisfied. Explain what makes it misleading and what a naive reading would get wrong.
+   but is weak or vacuous: for example, a rule whose confidence is close to **B's
+   own base frequency**, so that `lift` is near 1 (or below) even though the
+   confidence number looks healthy. Explain what makes it misleading and what a
+   naive reading would get wrong.
    *(Anchor fact for this discussion: the most frequent item,
    `85123A` — WHITE HANGING HEART T-LIGHT HOLDER — appears in 1,959 of 17,080
-   baskets, i.e. 11.47%. It is frequent, but it is not in every basket, so
-   "high confidence" alone does not imply an informative rule.)*
+   baskets, i.e. 11.47%. Since `lift = confidence / P(B)`, lift stays near 1 only
+   when confidence is near B's base rate; because the commonest B is just 11.47%,
+   such near-trivial rules appear only at low confidence thresholds — at 0.5% / 10%
+   the page shows two rules with `lift ≤ 1`, whereas at confidence ≥ 30% every rule
+   has `lift ≥ 0.30 / 0.1147 ≈ 2.62` (the smallest at support ≥ 1% is about 2.64)
+   and none is trivial.)*
 3. **Threshold trade-off.** State and justify the minimum support and confidence
    thresholds you actually chose for your final rule table. Then run the miner with
    at least two settings (for example 1% vs 3% support; 30% vs 60% confidence) and
@@ -176,8 +185,9 @@ Notes:
   `lift = 1` means A and B are independent, `lift > 1` means they co-occur more than
   chance, `lift < 1` means less than chance. Lift **is symmetric**:
   `lift(A → B) = lift(B → A)`.
-- The two denominators that can be zero are `N` (never zero here) and `count(A)`
-  (zero when the antecedent never occurs). Both must be guarded.
+- The three denominators that can be zero are `N` (never zero here), `count(A)`
+  (zero when the antecedent never occurs), and `count(B)` (zero when the
+  consequent never occurs). All three must be guarded.
 
 ---
 
@@ -204,9 +214,10 @@ Notes:
    itemset.
 5. Implement `generateRules(frequentItemsets, minConfidence)`, generating both
    rule directions (`A → B` and `B → A`) and keeping the rules that pass the
-   threshold. Confirm that the two miner checks now report `PASS` and that the
-   fixture's `lift = 1`, `lift > 1`, and `lift < 1` cases match the hand-computed
-   values in `tinyWorkedExample`.
+   threshold. Confirm that the two miner checks (`findFrequentItemsets` and
+   `generateRules`) now report `PASS`. The fixture's `lift = 1`, `lift > 1`, and
+   `lift < 1` cases are covered separately by the earlier metric checks against
+   the hand-computed values in `tinyWorkedExample`.
 6. Run the miner on the real dataset at two threshold settings and save the rule
    tables you will cite.
 7. Hand-compute support, confidence, and lift for **one** rule from the real data

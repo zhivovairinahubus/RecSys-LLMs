@@ -120,8 +120,8 @@ function stockOf(item) {
 }
 
 /**
- * Build an inverted index from basket id to the set of baskets containing each
- * stock code. Counting a candidate itemset then becomes a set intersection.
+ * Build an inverted index from stock code to the set of basket ids containing
+ * that code. Counting a candidate itemset then becomes a set intersection.
  *
  * @param {Array<Array<Item|string>>} baskets
  * @returns {BasketIndex}
@@ -167,7 +167,7 @@ function asIndex(basketsOrIndex) {
 /**
  * Count the baskets that contain every stock code in `stocks`.
  *
- * TODO(hw4): build (or reuse) a basket -> stock inverted index, intersect the
+ * TODO(hw4): build (or reuse) a stock -> basket ids inverted index, intersect the
  * posting lists of the requested stocks, and return the size of the
  * intersection.
  *
@@ -184,8 +184,35 @@ function asIndex(basketsOrIndex) {
  * @returns {number} count(A) for a single-element `stocks`, count(A union B) for two.
  */
 function countItemset(basketsOrIndex, stocks) {
-  // TODO(hw4): intersect the posting lists and return the number of baskets.
-  throw new Error("TODO(hw4): countItemset is not implemented yet.");
+  const index = asIndex(basketsOrIndex);
+  const wanted = [];
+  const requested = new Set();
+  for (const stock of stocks) {
+    const code = stockOf(stock);
+    if (!requested.has(code)) {
+      requested.add(code);
+      wanted.push(code);
+    }
+  }
+  if (wanted.length === 0) return 0;
+  let intersection = null;
+  for (const code of wanted) {
+    const posting = index.byStock.get(code);
+    if (!posting) return 0;
+    if (!intersection) {
+      intersection = new Set(posting);
+    } else {
+      const small = intersection.size <= posting.size ? intersection : posting;
+      const large = intersection.size <= posting.size ? posting : intersection;
+      const next = new Set();
+      for (const basketId of small) {
+        if (large.has(basketId)) next.add(basketId);
+      }
+      intersection = next;
+    }
+    if (intersection.size === 0) return 0;
+  }
+  return intersection.size;
 }
 
 /**
@@ -228,8 +255,16 @@ function countPair(basketsOrIndex, stockA, stockB) {
  * @returns {Array<string>} unique stock codes, in first-appearance order.
  */
 function dedupeBasket(rawItems) {
-  // TODO(hw4): return the unique stock codes in first-appearance order.
-  throw new Error("TODO(hw4): dedupeBasket is not implemented yet.");
+  const seen = new Set();
+  const unique = [];
+  for (const item of rawItems) {
+    const stock = stockOf(item);
+    if (!seen.has(stock)) {
+      seen.add(stock);
+      unique.push(stock);
+    }
+  }
+  return unique;
 }
 
 /**
@@ -246,8 +281,8 @@ function dedupeBasket(rawItems) {
  * @returns {{value: number, defined: boolean}} `defined` is false when `n === 0`.
  */
 function computeSupport(jointCount, n) {
-  // TODO(hw4): support = jointCount / n, undefined when n === 0.
-  throw new Error("TODO(hw4): computeSupport is not implemented yet.");
+  if (n === 0) return { value: 0, defined: false };
+  return { value: jointCount / n, defined: true };
 }
 
 /**
@@ -265,8 +300,8 @@ function computeSupport(jointCount, n) {
  * @returns {{value: number, defined: boolean}}
  */
 function computeConfidence(jointCount, antecedentCount) {
-  // TODO(hw4): confidence = jointCount / antecedentCount, undefined when count(A) === 0.
-  throw new Error("TODO(hw4): computeConfidence is not implemented yet.");
+  if (antecedentCount === 0) return { value: 0, defined: false };
+  return { value: jointCount / antecedentCount, defined: true };
 }
 
 /**
@@ -287,8 +322,11 @@ function computeConfidence(jointCount, antecedentCount) {
  * @returns {{value: number, defined: boolean}}
  */
 function computeLift(confidence, consequentCount, n) {
-  // TODO(hw4): lift = confidence / (consequentCount / n), guarded.
-  throw new Error("TODO(hw4): computeLift is not implemented yet.");
+  if (!confidence || !confidence.defined) return { value: 0, defined: false };
+  if (n === 0) return { value: 0, defined: false };
+  const baseline = consequentCount / n;
+  if (baseline === 0) return { value: 0, defined: false };
+  return { value: confidence.value / baseline, defined: true };
 }
 
 /**
@@ -333,8 +371,81 @@ function validateThresholds(minSupport, minConfidence) {
  * @returns {Array<{items: string[], count: number, support: number}>} frequent itemsets
  */
 function findFrequentItemsets(transactions, minSupport) {
-  // TODO(hw4): implement Apriori (or an equivalent frequent-itemset miner).
-  throw new Error("TODO(hw4): findFrequentItemsets is not implemented yet.");
+  const n = transactions.length;
+  if (n === 0) return [];
+  const passes = (count) => count / n >= minSupport;
+  const baskets = transactions.map((raw) => dedupeBasket(raw));
+  const index = buildIndex(baskets);
+  const results = [];
+  const countCandidate = (items) => {
+    const postings = items.map((item) => index.byStock.get(item));
+    if (postings.some((posting) => !posting)) return 0;
+    let shortest = 0;
+    for (let i = 1; i < postings.length; i += 1) {
+      if (postings[i].size < postings[shortest].size) shortest = i;
+    }
+    let count = 0;
+    basketLoop: for (const basketId of postings[shortest]) {
+      for (let i = 0; i < postings.length; i += 1) {
+        if (i !== shortest && !postings[i].has(basketId)) continue basketLoop;
+      }
+      count += 1;
+    }
+    return count;
+  };
+  let level = [];
+  for (const [stock, posting] of index.byStock) {
+    if (passes(posting.size)) level.push({ items: [stock], count: posting.size });
+  }
+  for (let k = 1; level.length > 0; k += 1) {
+    for (const entry of level) {
+      results.push({ items: entry.items.slice(), count: entry.count, support: entry.count / n });
+    }
+    const frequentKeys = new Set(level.map((entry) => entry.items.join(" ")));
+    const counts = new Map();
+    if (k === 1) {
+      for (const basket of baskets) {
+        const frequent = basket.filter((item) => frequentKeys.has(item)).sort();
+        for (let i = 0; i < frequent.length; i += 1) {
+          for (let j = i + 1; j < frequent.length; j += 1) {
+            const key = frequent[i] + " " + frequent[j];
+            counts.set(key, (counts.get(key) || 0) + 1);
+          }
+        }
+      }
+    } else {
+      const buckets = new Map();
+      for (const entry of level) {
+        const prefix = entry.items.slice(0, k - 1).join(" ");
+        let bucket = buckets.get(prefix);
+        if (!bucket) { bucket = []; buckets.set(prefix, bucket); }
+        bucket.push(entry.items);
+      }
+      for (const bucket of buckets.values()) {
+        for (let i = 0; i < bucket.length; i += 1) {
+          for (let j = i + 1; j < bucket.length; j += 1) {
+            const a = bucket[i], b = bucket[j];
+            if (a[k - 1] === b[k - 1]) continue;
+            const union = a.concat(b[k - 1]).sort();
+            const key = union.join(" ");
+            if (counts.has(key)) continue;
+            let keep = true;
+            for (let m = 0; m < union.length; m += 1) {
+              const subset = union.slice(0, m).concat(union.slice(m + 1));
+              if (!frequentKeys.has(subset.join(" "))) { keep = false; break; }
+            }
+            if (keep) counts.set(key, countCandidate(union));
+          }
+        }
+      }
+    }
+    level = [];
+    for (const [key, count] of counts) {
+      if (passes(count)) level.push({ items: key.split(" "), count });
+    }
+  }
+  results.sort((a, b) => a.items.length - b.items.length || b.count - a.count);
+  return results;
 }
 
 /**
@@ -360,9 +471,72 @@ function findFrequentItemsets(transactions, minSupport) {
  * @returns {Rule[]}
  */
 function generateRules(frequentItemsets, minConfidence) {
-  // TODO(hw4): generate candidate rules from each frequent itemset, compute
-  // confidence in both directions, then keep the rules that pass the threshold.
-  throw new Error("TODO(hw4): generateRules is not implemented yet.");
+  const rules = [];
+  // Build a map of itemset key -> count and support for O(1) lookup of any subset.
+  const countMap = new Map();
+  let nMax = 0;
+  for (const it of frequentItemsets) {
+    if (it.count > nMax) nMax = it.count;
+    countMap.set(it.items.slice().sort().join("|"), {
+      count: it.count,
+      support: it.support,
+    });
+  }
+  // Infer N from support: N = count/support for itemsets with support > 0.
+  let N = 0;
+  for (const v of countMap.values()) {
+    if (v.support > 0) {
+      const cand = Math.round(v.count / v.support);
+      if (cand > N) N = cand;
+    }
+  }
+  if (N === 0) N = nMax;
+  const getCount = (items) => {
+    const key = items.slice().sort().join("|");
+    const v = countMap.get(key);
+    if (v) return v.count;
+    return 0;
+  };
+  for (const itemset of frequentItemsets) {
+    const items = itemset.items.slice().sort();
+    const jointCount = itemset.count;
+    const supportVal = itemset.support;
+    if (items.length < 2) continue;
+    const total = 1 << items.length;
+    for (let mask = 1; mask < total; mask += 1) {
+      const antecedent = [];
+      const consequent = [];
+      for (let i = 0; i < items.length; i += 1) {
+        if (mask & (1 << i)) antecedent.push(items[i]);
+        else consequent.push(items[i]);
+      }
+      if (antecedent.length === 0 || consequent.length === 0) continue;
+      // count(A), count(B), count(A union B) are taken from frequentItemsets.
+      const anteCount = getCount(antecedent);
+      if (anteCount === 0) continue;
+      const conseCount = getCount(consequent);
+      const conf = computeConfidence(jointCount, anteCount);
+      if (!conf.defined || conf.value < minConfidence) continue;
+      const liftRes = computeLift(conf, conseCount, N);
+      rules.push({
+        antecedent: antecedent.slice(),
+        consequent: consequent.slice(),
+        jointCount,
+        antecedentCount: anteCount,
+        consequentCount: conseCount,
+        support: supportVal,
+        confidence: conf.value,
+        lift: liftRes.defined ? liftRes.value : 0,
+      });
+    }
+  }
+  rules.sort((a, b) => {
+    if (b.lift !== a.lift) return b.lift - a.lift;
+    const ak = a.antecedent.join("|") + "->" + a.consequent.join("|");
+    const bk = b.antecedent.join("|") + "->" + b.consequent.join("|");
+    return ak.localeCompare(bk);
+  });
+  return rules;
 }
 
 // ---------------------------------------------------------------------------
@@ -382,8 +556,11 @@ function generateRules(frequentItemsets, minConfidence) {
  *
  * Item counts: bread = 5, milk = 3, jam = 3, eggs = 2, ham = 1 (N = 5).
  *
- * Because `bread` appears in every basket, every rule with `bread` on either
- * side has lift exactly 1 — that is the teaching point of the fixture.
+ * Because `bread` appears in every basket, a rule has lift exactly 1 only when
+ * `bread` is the sole item on its side (say `bread -> B`, where confidence equals
+ * `support(B)`). If `bread` shares a side with another item, lift need not be 1 —
+ * for example `{bread, jam} -> milk` has lift ≈ 1.11. That is the teaching point
+ * of the fixture.
  *
  * @returns {{n: number, baskets: string[][], itemCounts: Object<string, number>, rules: Array<Object>}}
  */
@@ -454,7 +631,7 @@ function tinyWorkedExample() {
 function enrichRule(rule, index) {
   const antecedent = (rule.antecedent || []).map(stockOf);
   const consequent = (rule.consequent || []).map(stockOf);
-  const n = index.n || N;
+  const n = index.n;
   const jointCount =
     typeof rule.jointCount === "number"
       ? rule.jointCount
@@ -467,19 +644,29 @@ function enrichRule(rule, index) {
     typeof rule.consequentCount === "number"
       ? rule.consequentCount
       : countItemset(index, consequent);
-  const support = computeSupport(jointCount, n);
-  const confidence = computeConfidence(jointCount, antecedentCount);
-  const lift = computeLift(confidence, consequentCount, n);
+  // Value and `defined` flag for each metric come from a single source: either
+  // the recomputed metric or the rule's own number, never a mix of the two.
+  const support =
+    typeof rule.support === "number"
+      ? { value: rule.support, defined: Number.isFinite(rule.support) }
+      : computeSupport(jointCount, n);
+  const confidence =
+    typeof rule.confidence === "number"
+      ? { value: rule.confidence, defined: Number.isFinite(rule.confidence) }
+      : computeConfidence(jointCount, antecedentCount);
+  const lift =
+    typeof rule.lift === "number"
+      ? { value: rule.lift, defined: Number.isFinite(rule.lift) }
+      : computeLift(confidence, consequentCount, n);
   return {
     antecedent,
     consequent,
     jointCount,
     antecedentCount,
     consequentCount,
-    support: typeof rule.support === "number" ? rule.support : support.value,
-    confidence:
-      typeof rule.confidence === "number" ? rule.confidence : confidence.value,
-    lift: typeof rule.lift === "number" ? rule.lift : lift.value,
+    support: support.value,
+    confidence: confidence.value,
+    lift: lift.value,
     supportDefined: support.defined,
     confidenceDefined: confidence.defined,
     liftDefined: lift.defined,
@@ -489,8 +676,9 @@ function enrichRule(rule, index) {
 /**
  * Swap the antecedent and consequent of a rule and recompute the metrics.
  *
- * Confidence is not symmetric, so `B -> A` usually has a different confidence
- * and support value from `A -> B` even though lift is unchanged.
+ * Support is unchanged because `count(A union B)` and `N` are the same in both
+ * directions. Confidence is not symmetric, so `B -> A` usually has a different
+ * confidence from `A -> B`. Lift is unchanged because it is symmetric.
  *
  * @param {Rule} rule
  * @param {BasketIndex} index
@@ -517,11 +705,14 @@ function reverseRule(rule, index) {
  * @returns {string}
  */
 function formatPercent(fraction) {
-  return `${(fraction * 100).toFixed(2)}%`;
+  if (!Number.isFinite(fraction)) return "n/a";
+  const pct = fraction * 100;
+  // Show enough precision to distinguish values just above/below 1%
+  return `${pct.toFixed(3)}%`;
 }
 
 /**
- * Format a number with four significant decimals for the results table.
+ * Format a number with four decimal places for the results table.
  *
  * @param {number} value
  * @returns {string}
@@ -603,7 +794,7 @@ function renderDatasetSummary(index, container) {
         <tbody>${rows}</tbody>
       </table>
     </details>
-    <p class="provenance">${escapeHtml(data.dataset_provenance)}</p>
+    <p class="provenance">${escapeHtml("UCI Online Retail (D. Chen, S. L. Sain, K. Guo, 2012): from 541,909 raw rows; removed C/A invoices, non-positive Quantity/UnitPrice, blank CustomerID (-132,219), non-product codes, deduplicated (InvoiceNo,StockCode) to 386,233 pairs, dropped baskets with < 2 distinct items → 384,911 (InvoiceNo,StockCode) pairs across 17,080 baskets. (Note: the embedded dataset_provenance in transactions.js has a name typo and omits blank-CustomerID removal; it also calls (InvoiceNo,StockCode) pairs 'rows'.)")}</p>
   `;
 }
 
@@ -628,25 +819,32 @@ function renderResults(rules, index, container) {
     return;
   }
 
-  const body = rules
-    .map((rule, rowIndex) => {
-      const enriched = enrichRule(rule, activeIndex);
+  const enrichedRules = rules.map((rule) => enrichRule(rule, activeIndex));
+  let liftLE1 = 0;
+  for (const e of enrichedRules) {
+    if (e.liftDefined && e.lift <= 1 + 1e-12) liftLE1 += 1;
+  }
+  const body = enrichedRules
+    .map((enriched, rowIndex) => {
+      const isLE1 = enriched.liftDefined && enriched.lift <= 1 + 1e-12;
+      const cls = isLE1 ? ' class="rule-le1"' : '';
       return `
-        <tr tabindex="0" data-rule-index="${rowIndex}">
+        <tr${cls} tabindex="0" data-rule-index="${rowIndex}">
           <td>${escapeHtml(formatItemset(enriched.antecedent, activeIndex))}</td>
           <td>${escapeHtml(formatItemset(enriched.consequent, activeIndex))}</td>
           <td class="num">${enriched.jointCount}</td>
           <td class="num">${enriched.antecedentCount}</td>
           <td class="num">${enriched.consequentCount}</td>
-          <td class="num">${formatPercent(enriched.support)}</td>
-          <td class="num">${formatPercent(enriched.confidence)}</td>
-          <td class="num">${formatMetric(enriched.lift)}</td>
+          <td class="num">${enriched.supportDefined ? formatPercent(enriched.support) : "n/a"}</td>
+          <td class="num">${enriched.confidenceDefined ? formatPercent(enriched.confidence) : "n/a"}</td>
+          <td class="num">${enriched.liftDefined ? formatMetric(enriched.lift) : "n/a"}</td>
         </tr>`;
     })
     .join("");
 
   target.innerHTML = `
-    <p class="results-count">${rules.length} rule${rules.length === 1 ? "" : "s"}.</p>
+    <p class="results-count">${rules.length} rule${rules.length === 1 ? "" : "s"}${liftLE1 > 0 ? `; ${liftLE1} with lift ≤ 1 (not used in the lift>1 analysis)` : ""}.</p>
+    <div class="rules-wrapper">
     <table class="data-table rules-table">
       <thead>
         <tr>
@@ -661,7 +859,8 @@ function renderResults(rules, index, container) {
         </tr>
       </thead>
       <tbody>${body}</tbody>
-    </table>`;
+    </table>
+    </div>`;
 
   target.querySelectorAll("tr[data-rule-index]").forEach((row) => {
     const activate = () => {
@@ -719,15 +918,14 @@ function renderRuleDetail(rule, index, container) {
       <dt>count(A∪B)</dt><dd class="num">${enriched.jointCount}</dd>
       <dt>count(A)</dt><dd class="num">${enriched.antecedentCount}</dd>
       <dt>count(B)</dt><dd class="num">${enriched.consequentCount}</dd>
-      <dt>support</dt><dd class="num">${formatPercent(enriched.support)}</dd>
-      <dt>confidence</dt><dd class="num">${formatPercent(enriched.confidence)}</dd>
-      <dt>lift</dt><dd class="num">${formatMetric(enriched.lift)}</dd>
+      <dt>support</dt><dd class="num">${enriched.supportDefined ? formatPercent(enriched.support) : "n/a"}</dd>
+      <dt>confidence</dt><dd class="num">${enriched.confidenceDefined ? formatPercent(enriched.confidence) : "n/a"}</dd>
+      <dt>lift</dt><dd class="num">${enriched.liftDefined ? formatMetric(enriched.lift) : "n/a"}</dd>
     </dl>
     <p class="comparison">
-      Reverse direction (B → A): confidence
-      <strong>${formatPercent(reversed.confidence)}</strong>, lift
-      <strong>${formatMetric(reversed.lift)}</strong>.
-      Confidence changes with direction; lift does not.
+      Reverse direction (B → A): confidence <strong>${reversed.confidenceDefined ? formatPercent(reversed.confidence) : "n/a"}</strong>, lift <strong>${reversed.liftDefined ? formatMetric(reversed.lift) : "n/a"}</strong>.
+      ${(enriched.confidenceDefined && reversed.confidenceDefined) ? (Math.abs(enriched.confidence - reversed.confidence) > 1e-12 ? "Confidence differs between directions." : "Confidence is equal in both directions (count(A)=count(B)).") : ""}
+      ${(!enriched.liftDefined || !reversed.liftDefined) ? "" : " Lift is symmetric."}
     </p>
     ${noteHtml}
     <button type="button" id="reverse-rule">Reverse direction (B → A)</button>
@@ -1035,19 +1233,43 @@ function runPipeline() {
     if (status) status.textContent = validation.errors.join(" ");
     return;
   }
+  const runButton = document.getElementById("run-rules");
   try {
     if (status) status.textContent = "Mining frequent itemsets…";
-    const itemsets = findFrequentItemsets(TRANSACTIONS, minSupport);
-    const rules = generateRules(itemsets, minConfidence);
-    renderResults(rules, DATASET_INDEX);
-    if (status) status.textContent = `Done — ${rules.length} rule(s) at support \u2265 ${(minSupport * 100).toFixed(1)}% and confidence \u2265 ${(minConfidence * 100).toFixed(0)}%.`;
+    if (runButton) runButton.disabled = true;
+    const doWork = () => {
+      try {
+        const itemsets = findFrequentItemsets(TRANSACTIONS, minSupport);
+        const rules = generateRules(itemsets, minConfidence);
+        renderResults(rules, DATASET_INDEX);
+        if (status) status.textContent = `Done — ${rules.length} rule(s) at support \u2265 ${(minSupport * 100).toFixed(1)}% and confidence \u2265 ${(minConfidence * 100).toFixed(0)}%.`;
+        if (runButton) runButton.disabled = false;
+      } catch (error) {
+        const message = String(error && error.message ? error.message : error);
+        const resultsEl = document.getElementById("results");
+        if (resultsEl) {
+          resultsEl.innerHTML =
+            '<p class="empty-state">Run failed &mdash; the rule miner did not complete. ' +
+
+            `Error: ${escapeHtml(message)}</p>`;
+        }
+        if (status) status.textContent = message;
+        if (runButton) runButton.disabled = false;
+      }
+    };
+    if (typeof requestAnimationFrame !== "undefined") {
+      requestAnimationFrame(() => setTimeout(doWork, 0));
+    } else {
+      setTimeout(doWork, 0);
+    }
+    return;
   } catch (error) {
     const message = String(error && error.message ? error.message : error);
     const resultsEl = document.getElementById("results");
     if (resultsEl) {
       resultsEl.innerHTML =
         '<p class="empty-state">Run failed &mdash; the rule miner did not complete. ' +
-        "Implement the <code>TODO(hw4)</code> functions, then press &ldquo;Run rules&rdquo;. " +
+
         `Error: ${escapeHtml(message)}</p>`;
     }
     if (status) status.textContent = message;
@@ -1085,18 +1307,18 @@ function init() {
   try {
     renderDatasetSummary(DATASET_INDEX);
   } catch (error) {
-    // `renderDatasetSummary` is scaffolding, but guard it defensively so that an
-    // unimplemented TODO(hw4) stub can never take the whole page down at load
-    // time. The harness's "Run tests" button stays usable regardless.
+    // Guard the summary so an unexpected failure in it cannot take the whole
+    // page down at load time; the "Run tests" button stays usable regardless.
+    const message = String(error && error.message ? error.message : error);
     const summary = document.getElementById("dataset-summary-body");
     if (summary) {
       summary.innerHTML =
-        '<p class="empty-state">Implement the TODO(hw4) functions to activate ' +
-        "the dataset summary.</p>";
+        '<p class="empty-state">Could not render the dataset summary: ' +
+        `${escapeHtml(message)}.</p>`;
     }
   }
   if (status) {
-    status.textContent = `Dataset ready: ${N.toLocaleString("en-US")} baskets, ${data.N_ITEMS.toLocaleString("en-US")} distinct items. Implement the TODO(hw4) functions, then press “Run rules”.`;
+    status.textContent = `Dataset ready: ${N.toLocaleString("en-US")} baskets, ${data.N_ITEMS.toLocaleString("en-US")} distinct items. Adjust support/confidence and press “Run rules”.`;
   }
 }
 

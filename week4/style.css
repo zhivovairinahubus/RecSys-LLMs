@@ -307,3 +307,36 @@ input[type="range"]:focus-visible {
     position: static;
   }
 }
+.rule-le1 { background-color: #fff7ed; }
+
+/* Scrollable rules table with sticky header */
+.rules-wrapper {
+  max-height: 520px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.rules-wrapper .rules-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 2;
+}
+
+/* Minimal styles referenced by markup/scripts */
+.load-error {
+  color: #b91c1c;
+  font-weight: 600;
+  padding: 0.75rem 0;
+}
+
+.top-items {
+  margin: 0.75rem 0;
+}
+
+.top-items > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
