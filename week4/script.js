@@ -9,7 +9,7 @@
  * "minimum confidence") plus a "Run rules" button. Because nothing is fetched,
  * the page works from a `file://` URL with no server.
  *
- * WHAT YOU MUST IMPLEMENT (`TODO(hw4)` — each stub throws until you write it):
+ * IMPLEMENTED below (the seven functions that started as `TODO(hw4)` stubs):
  *   1. `dedupeBasket`         — unique stock codes in a basket, first-appearance order.
  *   2. `countItemset`         — baskets containing every requested stock (`0` if any is absent).
  *   3. `computeSupport`       — support = count(A union B) / N, guarded when N = 0.
@@ -18,12 +18,11 @@
  *   6. `findFrequentItemsets` — mine frequent itemsets (Apriori or equivalent).
  *   7. `generateRules`        — turn frequent itemsets into both-direction rules.
  *
- * PROVIDED for you (scaffolding): dataset loading/decoding from `window.HW4`, the
+ * Also in this file (scaffolding): dataset loading/decoding from `window.HW4`, the
  * inverted-index builder (`buildIndex` / `asIndex` / `indexCache`), the thin
- * counting wrappers `countItem` / `countPair` (they call your `countItemset` and
- * therefore also throw until it is implemented), threshold validation and slider
- * readout, the DOM wiring, all formatting and rendering helpers, and the test
- * harness. Leave the provided code as-is and implement only the stubs above.
+ * counting wrappers `countItem` / `countPair` (they delegate to `countItemset`),
+ * threshold validation and slider readout, the DOM wiring, all formatting and
+ * rendering helpers, and the test harness. Leave the provided code as-is.
  *
  * Metrics (see week4/readme.md for definitions):
  *   support(A -> B)    = count(A union B) / N
@@ -101,10 +100,10 @@ let N = data.N_BASKETS;
  */
 
 // ---------------------------------------------------------------------------
-// Provided helpers and student stubs
+// Provided helpers and implemented functions
 //
-// Functions carrying a `TODO(hw4)` marker are stubs you must implement; every
-// other function in this file is scaffolding and should be left as-is.
+// The seven functions below that once carried a `TODO(hw4)` marker are now
+// implemented; the remaining functions are scaffolding.
 // ---------------------------------------------------------------------------
 
 /**
@@ -167,9 +166,8 @@ function asIndex(basketsOrIndex) {
 /**
  * Count the baskets that contain every stock code in `stocks`.
  *
- * TODO(hw4): build (or reuse) a stock -> basket ids inverted index, intersect the
- * posting lists of the requested stocks, and return the size of the
- * intersection.
+ * Build (or reuse) a stock -> basket ids inverted index, intersect the posting
+ * lists of the requested stocks, and return the size of the intersection.
  *
  * Contract:
  *  - Accept either a ready-made index or a raw basket array. The provided
@@ -242,9 +240,8 @@ function countPair(basketsOrIndex, stockA, stockB) {
  * Remove repeated item identities from a raw basket, keeping first-appearance
  * order. A basket is a set of items, so duplicates must not be counted twice.
  *
- * TODO(hw4): walk the input once, map each entry to its stock code with the
- * provided `stockOf` helper, and return each distinct code the first time it
- * appears.
+ * Walks the input once, maps each entry to its stock code with the provided
+ * `stockOf` helper, and returns each distinct code the first time it appears.
  *
  * Contract:
  *  - An empty input returns `[]`.
@@ -270,7 +267,7 @@ function dedupeBasket(rawItems) {
 /**
  * Compute support as `jointCount / n`.
  *
- * TODO(hw4): return the fraction and flag the `n === 0` case.
+ * Returns the fraction and flags the `n === 0` case.
  *
  * Contract:
  *  - `defined: true` with `value = jointCount / n` when `n > 0`.
@@ -288,7 +285,7 @@ function computeSupport(jointCount, n) {
 /**
  * Compute confidence as `jointCount / antecedentCount`.
  *
- * TODO(hw4): return the fraction and flag the `antecedentCount === 0` case.
+ * Returns the fraction and flags the `antecedentCount === 0` case.
  *
  * Contract:
  *  - `defined: true` with `value = jointCount / antecedentCount` when count(A) > 0.
@@ -307,7 +304,7 @@ function computeConfidence(jointCount, antecedentCount) {
 /**
  * Compute lift as `confidence / (consequentCount / n)`.
  *
- * TODO(hw4): divide the incoming confidence by the consequent's baseline rate.
+ * Divides the incoming confidence by the consequent's baseline rate.
  *
  * Contract:
  *  - `defined: true` with `value = confidence.value / (consequentCount / n)`
@@ -354,8 +351,8 @@ function validateThresholds(minSupport, minConfidence) {
 /**
  * Mine all frequent itemsets whose support is at least `minSupport`.
  *
- * TODO(hw4): implement Apriori (level-wise candidate generation with a
- * downward-closure pruning step) or any equivalent frequent-itemset miner.
+ * Implements Apriori (level-wise candidate generation with a downward-closure
+ * pruning step).
  *
  * Contract:
  *  - Return one entry per frequent itemset: `{ items, count, support }`, where
@@ -452,9 +449,9 @@ function findFrequentItemsets(transactions, minSupport) {
  * Turn frequent itemsets into association rules and keep the ones whose
  * confidence is at least `minConfidence`.
  *
- * TODO(hw4): for each frequent itemset, split it into a non-empty antecedent `A`
- * and a non-empty, disjoint consequent `B` in BOTH directions, compute the
- * confidence for each direction, and keep the rules that pass the threshold.
+ * For each frequent itemset, splits it into a non-empty antecedent `A` and a
+ * non-empty, disjoint consequent `B` in BOTH directions, computes the confidence
+ * for each direction, and keeps the rules that pass the threshold.
  *
  * Contract:
  *  - Each returned rule follows the `Rule` shape documented at the top of this
