@@ -1,3 +1,10 @@
 # HW4: local-only artifacts (NOT part of the course deliverables)
 experiments/
 week4/backup/
+
+# HW5: local-only verification artifacts (NOT part of the course deliverables)
+week5-checks/results/
+week5-checks/node_modules/
+
+# macOS Finder metadata
+.DS_Store
