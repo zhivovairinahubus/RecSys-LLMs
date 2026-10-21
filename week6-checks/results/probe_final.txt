@@ -22,7 +22,7 @@ Matrix sparsity
 0 user(s) skipped while splitting. The split is chronological within each user, not globally time-consistent; MovieLens records rating times, not viewing sessions. An unobserved rating is missing data, not a zero.
 
 === Memory ===
-tf.memory().numTensors before two pageRank(0.85): 0
+tf.memory().numTensors before two pageRank(0.85): 4
 tf.memory().numTensors after two pageRank(0.85): 4
 
 === Runs ===
@@ -49,8 +49,49 @@ PASS  recommendTopK: excludes previously rated movies and breaks ties by ascendi
 PASS  graph mapping: node count equals observed users plus observed movies — 2554 nodes = 943 users + 1611 movies
 PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
 
+=== Run tests status: BEFORE vs AFTER Build graph ===
+BEFORE Build graph status: Self-checks: pass 11, fail 0, pending 1. Checks that cannot run yet (for example before Build graph) are reported PENDING, not failed.
+BEFORE Build graph hint: Checks that are not implemented yet are reported as PENDING (TODO(hw6)); they are not counted as passing.
+BEFORE Build graph log:
+HW6 self-checks — pass 11, fail 0, pending 1 (of 12)
+backend: webgl
+MF model: not loaded yet (loads on first MF need)
+
+PASS  reference graph: uniform alpha=0.85 matches readme 4.1 values — C>A>B>D; produced by student pageRank(alpha, {transition: REFERENCE_GRAPH.transition}), iterations 28
+PASS  reference graph: restart at A alpha=0.85 matches readme 4.1 values — A>C>B>D (D stays 0); produced by student personalizedPageRank(seedNode, alpha, {transition: REFERENCE_GRAPH.transition})
+PASS  row normalization: every nonzero-degree row sums to 1 — 6 positive-degree row(s) sum to 1; 2 dangling row(s) are zero
+PASS  restart distributions: nonnegative and summing to 1 — uniform + one-hot over 4 nodes
+PASS  iterations preserve total probability (sum approx 1) — sum = 1.0000002682 over 3 synthetic nodes (graph.js)
+PASS  stationary scores are nonnegative — 3 scores nonnegative (graph.js)
+PASS  one extra update produces approximately the same distribution — L1 = 7.972e-7
+PASS  zero-degree node fixture preserves probability mass — danglingMask [false,true,false,false,true]; mass 1.00000022 / 1.00000000
+PASS  matrix orientation: probability collects at the pointed-to node, not the source — p = [0.486486, 0.256757, 0.256757]
+PASS  recommendTopK: excludes previously rated movies and breaks ties by ascending id — 10 eligible items for user 1
+PENDING  graph mapping: node count equals observed users plus observed movies — interface unavailable — HW6_INTERFACE: no graph is active; press "Build graph" first
+PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
+
+AFTER Build graph status: Self-checks: pass 12, fail 0, pending 0. Checks that cannot run yet (for example before Build graph) are reported PENDING, not failed.
+AFTER Build graph hint: Checks that are not implemented yet are reported as PENDING (TODO(hw6)); they are not counted as passing.
+AFTER Build graph log:
+HW6 self-checks — pass 12, fail 0, pending 0 (of 12)
+backend: webgl
+MF model: not loaded yet (loads on first MF need)
+
+PASS  reference graph: uniform alpha=0.85 matches readme 4.1 values — C>A>B>D; produced by student pageRank(alpha, {transition: REFERENCE_GRAPH.transition}), iterations 28
+PASS  reference graph: restart at A alpha=0.85 matches readme 4.1 values — A>C>B>D (D stays 0); produced by student personalizedPageRank(seedNode, alpha, {transition: REFERENCE_GRAPH.transition})
+PASS  row normalization: every nonzero-degree row sums to 1 — 6 positive-degree row(s) sum to 1; 2 dangling row(s) are zero
+PASS  restart distributions: nonnegative and summing to 1 — uniform + one-hot over 4 nodes
+PASS  iterations preserve total probability (sum approx 1) — sum = 1.0000002682 over 3 synthetic nodes (graph.js)
+PASS  stationary scores are nonnegative — 3 scores nonnegative (graph.js)
+PASS  one extra update produces approximately the same distribution — L1 = 7.972e-7
+PASS  zero-degree node fixture preserves probability mass — danglingMask [false,true,false,false,true]; mass 1.00000022 / 1.00000000
+PASS  matrix orientation: probability collects at the pointed-to node, not the source — p = [0.486486, 0.256757, 0.256757]
+PASS  recommendTopK: excludes previously rated movies and breaks ties by ascending id — 10 eligible items for user 1
+PASS  graph mapping: node count equals observed users plus observed movies — 2554 nodes = 943 users + 1611 movies
+PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
+
 === Alpha sweep (validation Recall@10, PPR) ===
-time_ms: 22822.7
+time_ms: 23820.1
 best_alpha: 0.5
 note: 
 alpha 0.5: recall=0.11448315913208877
@@ -63,7 +104,7 @@ alpha 0.95: recall=0.07375030387909676
 {"value":0.5,"readout":"0.50"}
 
 === Comparison (test split, 4 methods) ===
-time_ms: 22822.7
+time_ms: 23820.1
 {"method":"popularity","recall":0.07602291343770759,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":271.99686411149816,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
 {"method":"pagerank","recall":0.07969324149418144,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":257.820325203252,"iterations":19,"residual":5.486072041094303e-7,"converged":true,"error":null,"note":null}
 {"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":21,"residual":9.78284361963233e-7,"converged":true,"error":null,"note":null}
@@ -256,7 +297,7 @@ time_ms: 22822.7
   "validationRMSE": 1.0160939234475768,
   "testRMSE": 1.0582837991811909,
   "source": "week6/mf_checkpoint.json (HW5 model, best validation epoch 3)",
-  "trainedAt": "2026-10-21T07:21:58.221Z",
+  "trainedAt": "2026-10-21T10:52:10.931Z",
   "history": []
 }
 
@@ -279,7 +320,11 @@ movies: 1682; titles with U+FFFD: 9; titles with any non-ASCII char: 9
   id 1633: � k�ldum klaka (Cold Fever) (1994)
 corrupted titles present in recommendations.csv: 0 (of 100 rows)
 
-=== PRIMARY FLOW: only "Evaluate Recall@10" clicked after Build graph ===
+=== Ego view cap (GRAPH_VIEW_STATE.lastRender after Build graph) ===
+seed user 1: after users=1 movies=119 edges=119 nodes=120 omitted=866; before-fix users=120 movies=0 edges=0
+seed user 2: after users=88 movies=32 edges=471 nodes=120 omitted=773; before-fix users=120 movies=0 edges=0
+screenshots: graph-view_before_user1.png, graph-view_after_user1.png, graph-view_after_user2.png
+
 selected alpha on slider: 0.5 (readout 0.50)
 validation sweep (inside Evaluate): 0.5=0.11448315913208877, 0.7=0.1047969507641043, 0.85=0.09002077155336492, 0.95=0.07375030387909676
 status: Evaluation run complete — selected alpha 0.50 on validation, applied to the slider, then evaluated on test.
@@ -290,11 +335,11 @@ test comparison rows:
   {"method":"mf","recall":0.010302410966487053,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":26.842044134727065,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
 
 === Timings (ms) ===
-page load -> dataset/split ready: 123
-Build graph: 30.6
-Run tests: 985.6
-Evaluate click (sweep -> slider -> test -> recall): 22822.7
-repeat Evaluate click: 17548.2
+page load -> dataset/split ready: 135
+Build graph: 35.5
+Run tests: 975.0
+Evaluate click (sweep -> slider -> test -> recall): 23820.1
+repeat Evaluate click: 18100.1
 
 === Tensor counts (tf.memory().numTensors) ===
 after two pageRank(0.85): 4

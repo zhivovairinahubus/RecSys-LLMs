@@ -139,7 +139,7 @@ the submitted numbers.
   graph-based rankings for that particular invariant; the graph rankings are
   covered by the other checks and by the independent cross-check. Left as-is.
 
-Three scaffolding behaviours were **corrected** because they produced wrong
+Four scaffolding behaviours were **corrected** because they produced wrong
 numbers (or wrong control flow) rather than merely awkward UI:
 
 - **Fallback MF collapsed to the global mean.** The provided in-browser trainer
@@ -168,6 +168,15 @@ numbers (or wrong control flow) rather than merely awkward UI:
   validation-selected α = 0.50 (PPR = 0.112189) required by readme 6.1. Fixed:
   Evaluate now runs the validation sweep first, applies the selected α to the
   slider, then evaluates test; the sweep button also sets the slider.
+- **Ego graph collapsed to an edgeless user column.** After Build graph the view
+  (`graph.js`, `graphBuildEgoView`) caps the 2-hop neighbourhood to `maxNodes`
+  (120) in plain ascending node-index order. Every user node index is smaller
+  than every movie index, so the cap kept only users and the drawing had no
+  movies and no edges. Fixed by selecting by hop layer instead: the seed, then
+  its 1-hop movies, then 2-hop co-users, ascending index within each layer — the
+  connected core always survives. Verified via `probe.js`: user 1 renders
+  1 user / 119 movies / 119 edges (was 120 / 0 / 0) and user 2 renders
+  88 / 32 / 471 (was 120 / 0 / 0); Run tests stays 12/0/0.
 
 No self-check is failing and no run reported nonconvergence at the selected
 settings.

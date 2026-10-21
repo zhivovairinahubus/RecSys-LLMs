@@ -190,6 +190,33 @@ async function main() {
     }
   })();
 
+  // Run tests BEFORE Build graph: checks that cannot run yet must be reported
+  // PENDING (not failed), and the status line must say so. Capitalised `hint`
+  // text is captured too, to confirm nothing says "TODO" on a normal path.
+  let runTestsBeforeBuild = null;
+  try {
+    runTestsBeforeBuild = await page.evaluate(async () => {
+      const btn = document.getElementById("run-tests");
+      if (btn) btn.click();
+      const deadline = Date.now() + 60000;
+      while (Date.now() < deadline) {
+        const el = document.getElementById("self-checks");
+        const t = el ? el.innerText || "" : "";
+        if (t.trim() && !t.includes("Press \u201CRun tests\u201D")) break;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      await new Promise((r) => setTimeout(r, 300));
+      const hint = document.querySelector("#self-checks-heading + .hint");
+      return {
+        status: document.getElementById("status")?.innerText || "",
+        log: document.getElementById("self-checks")?.innerText || "",
+        hint: hint ? hint.innerText : "",
+      };
+    });
+  } catch (e) {
+    logs.push(`[pre-build] run-tests failed: ${e.message}`);
+  }
+
   // Build graph first
   let buildGraphMs = null;
   try {
@@ -211,6 +238,143 @@ async function main() {
     logs.push(`[click] build-graph failed: ${e.message}`);
   }
 
+  // Ego-view cap check: after Build graph the drawn subgraph must keep the
+  // connected core (seed + its movies), not collapse to a user-only column.
+  // We render the fixed ego view for seeds 1 and 2, read the counts off
+  // GRAPH_VIEW_STATE.lastRender, and also reproduce the OLD (plain node-index)
+  // cap to prove it collapsed. Two screenshots of #graph-view are saved for
+  // comparison. This only drives the existing render/read functions.
+  let egoViewCheck = null;
+  try {
+    egoViewCheck = await page.evaluate(() => {
+      const g = (typeof getGraph === 'function') ? getGraph() : (typeof GRAPH !== 'undefined' ? GRAPH : null);
+      if (!g || !g.nodeCount) return { err: "no graph" };
+
+      // Rebuild a {nodes,edges} view for a given selected node set, mirroring
+      // graphBuildEgoView's assembly so the two selections draw identically.
+      function buildView(seed, selected) {
+        const nodes = [];
+        for (const node of selected) {
+          const isUser = g.isUserNode(node);
+          const id = isUser ? g.userIds[node] : g.movieOfNode(node);
+          nodes.push({
+            node: node,
+            key: "node:" + node,
+            label: isUser ? "U" + id : "M" + id,
+            kind: isUser ? "user" : "movie",
+            id: id,
+            degree: g.degree ? g.degree[node] : 0,
+            score: null,
+          });
+        }
+        const edges = [];
+        for (const a of nodes) {
+          if (a.kind !== "user") continue;
+          const uLocal = g.userIndexOf.get(a.id);
+          const row = g.R ? g.R[uLocal] : null;
+          if (!row) continue;
+          for (const b of nodes) {
+            if (b.kind !== "movie") continue;
+            const mLocal = g.movieIndexOf.get(b.id);
+            if (mLocal === undefined) continue;
+            if (row[mLocal]) edges.push({ source: a.node, target: b.node, directed: false });
+          }
+        }
+        return { kind: "ego", nodes: nodes, edges: edges, omitted: 0, nodeCount: g.nodeCount, note: "" };
+      }
+
+      // Unbounded 2-hop reachable set (same walk as the fixed builder).
+      function reachable2Hop(seed) {
+        const start = g.nodeOfUser(seed);
+        const seen = new Set([start]);
+        let frontier = [start];
+        for (let d = 0; d < 2; d++) {
+          const next = [];
+          for (const node of frontier) {
+            for (const nb of graphNeighbors(g, node)) {
+              if (!seen.has(nb)) { seen.add(nb); next.push(nb); }
+            }
+          }
+          frontier = next;
+        }
+        return { start: start, seen: seen };
+      }
+
+      const maxNodes = Math.max(1, Math.floor(GRAPH_VIEW_STATE.maxNodes) || 120);
+      const stats = {};
+      for (const seed of [1, 2]) {
+        const r = reachable2Hop(seed);
+
+        // AFTER: the fixed builder's own output + lastRender counts.
+        renderGraphView({ mode: "ego", seedUserId: seed });
+        const lr = GRAPH_VIEW_STATE.lastRender;
+        const afterView = graphBuildEgoView(seed);
+
+        // BEFORE: plain node-index sort over the reachable set (old behaviour).
+        const oldOrdered = [r.start].concat(
+          Array.from(r.seen).filter((node) => node !== r.start).sort((a, b) => a - b)
+        );
+        const beforeView = buildView(seed, oldOrdered.slice(0, maxNodes));
+
+        stats["user" + seed] = {
+          after: { users: lr.userCount, movies: lr.movieCount, edges: lr.edgeCount, nodes: lr.nodeCount, omitted: lr.omitted },
+          afterFromView: {
+            users: afterView.nodes.filter((n) => n.kind === "user").length,
+            movies: afterView.nodes.filter((n) => n.kind === "movie").length,
+            edges: afterView.edges.length,
+          },
+          before: {
+            users: beforeView.nodes.filter((n) => n.kind === "user").length,
+            movies: beforeView.nodes.filter((n) => n.kind === "movie").length,
+            edges: beforeView.edges.length,
+          },
+        };
+      }
+      // Draw the OLD collapsed view of seed 1 last, so the very next screenshot
+      // captures the "before" state.
+      const r1 = reachable2Hop(1);
+      const oldOrdered1 = [r1.start].concat(
+        Array.from(r1.seen).filter((node) => node !== r1.start).sort((a, b) => a - b)
+      );
+      graphDrawView(document.getElementById("graph-view"), buildView(1, oldOrdered1.slice(0, maxNodes)), {});
+      return { stats: stats };
+    });
+  } catch (e) {
+    egoViewCheck = { err: e.message };
+  }
+
+  // Screenshot the collapsed ("before") seed-1 view, just drawn above.
+  if (egoViewCheck && egoViewCheck.stats) {
+    try {
+      await page.waitForTimeout(200);
+      await page.locator("#graph-view").screenshot({ path: path.join(RESULTS, "graph-view_before_user1.png") });
+    } catch (e) {
+      logs.push(`[shot] before failed: ${e.message}`);
+    }
+  }
+  // Re-render the fixed seed-1 view and screenshot it ("after").
+  try {
+    await page.evaluate(() => { renderGraphView({ mode: "ego", seedUserId: 1 }); });
+    await page.waitForTimeout(200);
+    await page.locator("#graph-view").screenshot({ path: path.join(RESULTS, "graph-view_after_user1.png") });
+  } catch (e) {
+    logs.push(`[shot] after failed: ${e.message}`);
+  }
+  // Fixed seed-2 view screenshot ("after").
+  try {
+    await page.evaluate(() => { renderGraphView({ mode: "ego", seedUserId: 2 }); });
+    await page.waitForTimeout(200);
+    await page.locator("#graph-view").screenshot({ path: path.join(RESULTS, "graph-view_after_user2.png") });
+  } catch (e) {
+    logs.push(`[shot] after2 failed: ${e.message}`);
+  }
+  // Restore the page's own default render so later steps see a normal state.
+  try {
+    await page.evaluate(() => { renderGraphView({ mode: "ego", seedUserId: 1 }); });
+  } catch (e) {
+    logs.push(`[shot] restore failed: ${e.message}`);
+  }
+
   // Memory before
   const memBefore = await page.evaluate(() => {
     if (typeof tf !== 'undefined' && tf.memory) return tf.memory().numTensors;
@@ -230,15 +394,13 @@ async function main() {
   });
 
   let runTestsMs = null;
+  let runTestsAfterBuild = null;
   try {
     runTestsMs = await page.evaluate(async () => {
       const t0 = performance.now();
-      if (typeof runSelfChecks === 'function') {
-        runSelfChecks();
-      } else {
-        const btn = document.getElementById('run-tests');
-        if (btn) btn.click();
-      }
+      const btn = document.getElementById('run-tests');
+      if (btn) btn.click();
+      else if (typeof runSelfChecks === 'function') runSelfChecks();
       return performance.now() - t0;
     });
     await page.waitForFunction(() => {
@@ -247,6 +409,11 @@ async function main() {
       const t = el.innerText || '';
       return t.trim() && !t.includes('Press “Run tests”');
     }, { timeout: 60000 });
+    runTestsAfterBuild = await page.evaluate(() => ({
+      status: document.getElementById("status")?.innerText || "",
+      log: document.getElementById("self-checks")?.innerText || "",
+      hint: document.querySelector("#self-checks-heading + .hint")?.innerText || "",
+    }));
   } catch (e) {
     logs.push(`[click] run-tests failed: ${e.message}`);
   }
@@ -633,6 +800,19 @@ async function main() {
     "=== Self-checks (#self-checks) ===",
     selfChecks,
     "",
+    "=== Run tests status: BEFORE vs AFTER Build graph ===",
+    runTestsBeforeBuild ? (
+      "BEFORE Build graph status: " + runTestsBeforeBuild.status + "\n" +
+      "BEFORE Build graph hint: " + runTestsBeforeBuild.hint + "\n" +
+      "BEFORE Build graph log:\n" + runTestsBeforeBuild.log
+    ) : "BEFORE Build graph: (not captured)",
+    "",
+    runTestsAfterBuild ? (
+      "AFTER Build graph status: " + runTestsAfterBuild.status + "\n" +
+      "AFTER Build graph hint: " + runTestsAfterBuild.hint + "\n" +
+      "AFTER Build graph log:\n" + runTestsAfterBuild.log
+    ) : "AFTER Build graph: (not captured)",
+    "",
     "=== Alpha sweep (validation Recall@10, PPR) ===",
     `time_ms: ${sweep.ms === undefined ? "-" : sweep.ms.toFixed(1)}`,
     `best_alpha: ${sweep.best}`,
@@ -675,7 +855,17 @@ async function main() {
       `corrupted titles present in recommendations.csv: ${corruptedInSubmission.count} (of ${corruptedInSubmission.movieCount} rows)` +
       (corruptedInSubmission.hits.length ? "\n" + corruptedInSubmission.hits.map((h) => `  movieId ${h.movieId}: ${h.title}`).join("\n") : ""),
     "",
-    "=== PRIMARY FLOW: only \"Evaluate Recall@10\" clicked after Build graph ===",
+    "=== Ego view cap (GRAPH_VIEW_STATE.lastRender after Build graph) ===",
+    egoViewCheck && egoViewCheck.err ? `error: ${egoViewCheck.err}` :
+      [1, 2].map((n) => {
+        const s = (egoViewCheck.stats || {})["user" + n];
+        if (!s) return `user ${n}: -`;
+        return `seed user ${n}: after users=${s.after.users} movies=${s.after.movies} edges=${s.after.edges} nodes=${s.after.nodes} omitted=${s.after.omitted}` +
+          `; before-fix users=${s.before.users} movies=${s.before.movies} edges=${s.before.edges}`;
+      }).join("\n") +
+      "\nscreenshots: graph-view_before_user1.png, graph-view_after_user1.png, graph-view_after_user2.png",
+    "",
+
     evaluateClick && evaluateClick.err ? `error: ${evaluateClick.err}` :
       `selected alpha on slider: ${evaluateClick.sliderValue} (readout ${evaluateClick.sliderReadout})\n` +
       `validation sweep (inside Evaluate): ${(evaluateClick.sweep || []).map((r) => r.alpha + "=" + r.recall).join(", ")}\n` +

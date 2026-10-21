@@ -4067,7 +4067,7 @@ function hw6HandleRunTests() {
   const summary = runSelfChecks();
   hw6SetStatus(
     "Self-checks: pass " + summary.passed + ", fail " + summary.failed + ", pending " + summary.pending +
-    ". Unimplemented TODO(hw6) paths are reported PENDING, not failed.",
+    ". Checks that cannot run yet (for example before Build graph) are reported PENDING, not failed.",
   );
 }
 

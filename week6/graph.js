@@ -1052,8 +1052,9 @@ function graphNeighbors(graph, node) {
  * Build the capped ego subgraph for a seed user.
  *
  * Selection: the seed user's node plus its neighbours and their neighbours (a
- * 2-hop walk) in the bipartite graph, then apply the maxNodes cap in
- * deterministic node-index order. `omitted` is how many reachable nodes the cap
+ * 2-hop walk) in the bipartite graph, then apply the maxNodes cap by hop layer
+ * (seed, then 1-hop, then 2-hop, each sorted by ascending node index) so the
+ * connected core survives. `omitted` is how many reachable nodes the cap
  * left out, so the legend can report it.
  *
  * @param {number|null} seedUserId
@@ -1089,8 +1090,14 @@ function graphBuildEgoView(seedUserId, getScore) {
   const maxNodes = Math.max(1, Math.floor(GRAPH_VIEW_STATE.maxNodes) || 120);
   const startNode = graph.nodeOfUser(seed);
 
-  // Unbounded 2-hop reachable set, then cap deterministically.
+  // Unbounded 2-hop reachable set, kept per layer so the cap can prefer nearer
+  // nodes. On the bipartite graph the seed's 1-hop neighbours are its movies and
+  // the 2-hop ones are co-users; all user node indices are smaller than every
+  // movie index, so capping in plain node-index order would keep only users and
+  // draw an edgeless column. Layer order (seed, then 1-hop, then 2-hop) keeps a
+  // connected subgraph: the seed and its movies always make the cut.
   const reachable = new Set([startNode]);
+  const layers = []; // layers[d] = nodes first reached at depth d (1-based hops)
   let frontier = [startNode];
   for (let depth = 0; depth < 2; depth++) {
     const next = [];
@@ -1102,15 +1109,15 @@ function graphBuildEgoView(seedUserId, getScore) {
         }
       }
     }
+    layers.push(next);
     frontier = next;
     if (reachable.size > 500000) break; // hard safety valve
   }
 
-  const ordered = [startNode].concat(
-    Array.from(reachable)
-      .filter((node) => node !== startNode)
-      .sort((a, b) => a - b)
-  );
+  const ordered = [startNode];
+  for (const layer of layers) {
+    ordered.push(...layer.slice().sort((a, b) => a - b));
+  }
   const selected = new Set(ordered.slice(0, maxNodes));
   const omitted = reachable.size - selected.size;
 
@@ -1747,11 +1754,19 @@ function renderGraphView(opts) {
   graphRenderLegend(view, { colorByScore: colorByScore });
   graphRenderControls();
 
+  let userCount = 0;
+  let movieCount = 0;
+  for (const node of view.nodes) {
+    if (node.kind === "user") userCount++;
+    else if (node.kind === "movie") movieCount++;
+  }
   GRAPH_VIEW_STATE.lastRender = {
     mode: mode,
     seedUserId: GRAPH_VIEW_STATE.seedUserId,
     colorByScore: colorByScore,
     nodeCount: view.nodes.length,
+    userCount: userCount,
+    movieCount: movieCount,
     edgeCount: view.edges.length,
     omitted: view.omitted || 0,
     note: view.note || ""
