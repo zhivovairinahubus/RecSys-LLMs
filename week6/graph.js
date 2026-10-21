@@ -620,9 +620,9 @@ function pageRank(alpha, opts) {
  *    RAW USER ID (the MovieLens user id such as `1` or `943`), NOT a node index.
  *    It is translated to a node with `GRAPH.nodeOfUser(userId)`. This is what the
  *    real callers pass: the page adapter `hw6AdapterPPR` calls
- *    `personalizedPageRank(rawUserId, alpha)` (script.js:1456) with the raw id,
- *    and the page's two-user demonstration / recall path routes raw ids through
- *    `hw6UserNodeIndex` (script.js:1539). Passing a node index here would seed
+ *    `personalizedPageRank(rawUserId, alpha)` with the raw id, and the page's
+ *    two-user demonstration / recall path routes raw ids through
+ *    `hw6UserNodeIndex`. Passing a node index here would seed
  *    the wrong node - e.g. raw user `943` maps to node `942` while the value
  *    `943` is the first movie node - so the raw id is the only safe convention.
  *    A `null` / `undefined` first argument is the uniform restart (no seeding):
