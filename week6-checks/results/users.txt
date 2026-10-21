@@ -1,0 +1,136 @@
+HW6 business comparison (pure JS reference)
+split train/val/test = 79619/9596/10785
+graph = 943 users + 1611 movies = 2554 nodes
+test cohort = 861
+PPR alpha = 0.50 (selected on validation); K = 10
+MF model = week6/mf_checkpoint.json (mu=3.5806026200, 16 factors)
+
+=== Method comparison on the test cohort (861 users) ===
+method      Recall@10   conversion   catalog   meanPop   tail<5   slots
+popularity  0.076023    31.9%       82    272.00     0.0%   8610
+pagerank    0.079693    31.1%       74    257.82     0.0%   8610
+ppr         0.112189    39.5%      138    244.21     0.0%   8610
+mf          0.010302     6.2%      824     26.84    30.2%   8610
+
+=== Mean number of common movies in ONE user's Top-10, between methods ===
+(averaged over the 861 cohort users)
+ppr vs popularity = 6.3926
+ppr vs mf         = 0.1928
+ppr vs pagerank   = 5.6121
+mf  vs popularity = 0.1905
+
+=== MF with a train-rating floor on candidate movies ===
+floor    Recall@10   conversion   catalog   meanPop   tail<5
+>=5      0.016873     9.8%      768     40.61     0.0%
+>=20     0.025231    15.0%      618     68.87     0.0%
+>=50     0.035130    19.3%      435     98.29     0.0%
+
+=== User card: user 1 ===
+train ratings = 217; of them >= 4 = 131
+test ratings = 28; of them >= 4 = 19
+train genre profile (share of train ratings):
+  Drama        37.8%  (82)
+  Comedy       33.2%  (72)
+  Action       29.5%  (64)
+  Thriller     19.4%  (42)
+  Sci-Fi       16.6%  (36)
+  Adventure    15.7%  (34)
+  Romance      15.7%  (34)
+  War          10.1%  (22)
+examples of train 5-star movies (60 total, first 6):
+   168  Monty Python and the Holy Grail (1974)  [Comedy]
+   172  Empire Strikes Back, The (1980)  [Action,Adventure,Drama,Romance,Sci-Fi,War]
+   165  Jean de Florette (1986)  [Drama]
+   166  Manon of the Spring (Manon des sources) (1986)  [Drama]
+   196  Dead Poets Society (1989)  [Drama]
+    14  Postino, Il (1994)  [Drama,Romance]
+PPR Top-10 (alpha 0.50):
+    id  title                                       pop  conv  genres
+   100  Fargo (1996)                                377  yes   Crime,Drama,Thriller
+   258  Contact (1997)                              307  yes   Drama,Sci-Fi
+   286  English Patient, The (1996)                 279  -     Drama,Romance,War
+   318  Schindler's List (1993)                     224  -     Drama,War
+   357  One Flew Over the Cuckoo's Nest (1975)      202  -     Drama
+   483  Casablanca (1942)                           197  -     Drama,Romance,War
+   222  Star Trek: First Contact (1996)             189  yes   Action,Adventure,Sci-Fi
+   475  Trainspotting (1996)                        164  -     Drama
+   275  Sense and Sensibility (1995)                178  -     Drama,Romance
+   423  E.T. the Extra-Terrestrial (1982)           167  -     Children's,Drama,Fantasy,Sci-Fi
+MF Top-10 (alpha -):
+    id  title                                       pop  conv  genres
+  1122  They Made Me a Criminal (1939)                1  -     Crime,Drama
+   850  Perfect Candidate, A (1996)                   3  -     Documentary
+   647  Ran (1985)                                   51  -     Drama,War
+   612  Lost Horizon (1937)                          21  -     Drama
+   285  Secrets & Lies (1996)                       121  -     Drama
+   408  Close Shave, A (1995)                        85  -     Animation,Comedy,Thriller
+   511  Lawrence of Arabia (1962)                   134  -     Adventure,War
+   654  Chinatown (1974)                             97  -     Film-Noir,Mystery,Thriller
+   701  Wonderful, Horrible Life of Leni Riefensta    7  -     Documentary
+  1143  Hard Eight (1996)                             7  -     Crime,Thriller
+
+=== User card: user 2 ===
+train ratings = 49; of them >= 4 = 32
+test ratings = 7; of them >= 4 = 2
+train genre profile (share of train ratings):
+  Drama        57.1%  (28)
+  Comedy       30.6%  (15)
+  Romance      28.6%  (14)
+  Thriller     16.3%  (8)
+  Crime        14.3%  (7)
+  Action       12.2%  (6)
+  Sci-Fi       8.2%  (4)
+  Mystery      6.1%  (3)
+examples of train 5-star movies (8 total, first 6):
+   275  Sense and Sensibility (1995)  [Drama,Romance]
+    50  Star Wars (1977)  [Action,Adventure,Romance,Sci-Fi,War]
+   100  Fargo (1996)  [Crime,Drama,Thriller]
+   127  Godfather, The (1972)  [Action,Crime,Drama]
+   242  Kolya (1996)  [Comedy]
+   251  Shall We Dance? (1996)  [Comedy]
+PPR Top-10 (alpha 0.50):
+    id  title                                       pop  conv  genres
+   181  Return of the Jedi (1983)                   339  -     Action,Adventure,Romance,Sci-Fi,War
+     9  Dead Man Walking (1995)                     182  -     Drama
+     7  Twelve Monkeys (1995)                       234  -     Drama,Sci-Fi
+   117  Rock, The (1996)                            215  -     Action,Adventure,Thriller
+    98  Silence of the Lambs, The (1991)            308  -     Drama,Thriller
+   121  Independence Day (ID4) (1996)               207  -     Action,Sci-Fi,War
+   174  Raiders of the Lost Ark (1981)              312  -     Action,Adventure
+   268  Chasing Amy (1997)                          146  -     Drama,Romance
+   475  Trainspotting (1996)                        164  -     Drama
+    15  Mr. Holland's Opus (1995)                   160  -     Drama
+MF Top-10 (alpha -):
+    id  title                                       pop  conv  genres
+   615  39 Steps, The (1935)                         40  -     Thriller
+   511  Lawrence of Arabia (1962)                   134  -     Adventure,War
+   169  Wrong Trousers, The (1993)                   90  -     Animation,Comedy
+   408  Close Shave, A (1995)                        85  -     Animation,Comedy,Thriller
+   850  Perfect Candidate, A (1996)                   3  -     Documentary
+  1537  Cosi (1996)                                   3  -     Comedy
+   488  Sunset Blvd. (1950)                          43  -     Film-Noir
+   484  Maltese Falcon, The (1941)                   91  -     Film-Noir,Mystery
+  1396  Stonewall (1995)                              4  -     Drama
+    45  Eat Drink Man Woman (1994)                   50  -     Comedy,Drama
+
+=== Within-method Top-10 overlap between users 1 and 2 ===
+ppr         common movies (user 1 vs user 2) = 1
+mf          common movies (user 1 vs user 2) = 3
+popularity  common movies (user 1 vs user 2) = 1
+pagerank    common movies (user 1 vs user 2) = 1
+
+=== One-factor demo ===
+A. user 1 @ alpha 0.85
+   list = 100,258,286,318,357,483,288,300,222,313
+   mean list popularity = 245.50
+   common with user 2 @ 0.85 = 0
+B. user 2 @ alpha 0.85
+   list = 181,98,174,7,56,117,172,9,121,64
+   mean list popularity = 254.90
+   common with user 1 @ 0.85 = 0
+C. user 1 @ alpha 0.50
+   list = 100,258,286,318,357,483,222,475,275,423
+   mean list popularity = 228.40
+   common with A (user 1 @ 0.85) = 7
+   mean popularity change vs A = -17.10
+

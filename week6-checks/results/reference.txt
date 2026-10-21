@@ -1,0 +1,85 @@
+train / val / test = 79619 / 9596 / 10785
+graph: 943 users + 1611 movies = 2554 nodes
+zero-degree users / movies = 1 / 253; positive edges = 45602
+cohort val = 846 (excludedUnseen 4, excludedNoEligible 97)
+cohort test = 861 (excludedUnseen 13, excludedNoEligible 82)
+
+=== Alpha sweep (validation Recall@10, PPR) ===
+alpha 0.50: recall=0.1144831591 iterations=21 cohort=846
+alpha 0.70: recall=0.1047969508 iterations=41 cohort=846
+alpha 0.85: recall=0.0900207716 iterations=90 cohort=846
+alpha 0.95: recall=0.0737503039 iterations=283 cohort=846
+best alpha (ties -> smaller) = 0.5
+
+=== Test comparison at alpha=0.5 ===
+popularity: recall=0.0760229134 cohort=861 iterations=null
+pagerank: recall=0.0796932415 cohort=861 iterations=19
+ppr: recall=0.1121885322 cohort=861 iterations=21
+
+=== Top-10 users 1 and 2 (test split) ===
+user 1 / popularity:
+   100  377.0000000000  pop=377  Fargo (1996)
+   258  307.0000000000  pop=307  Contact (1997)
+   286  279.0000000000  pop=279  English Patient, The (1996)
+   300  235.0000000000  pop=235  Air Force One (1997)
+   288  226.0000000000  pop=226  Scream (1996)
+   318  224.0000000000  pop=224  Schindler's List (1993)
+   313  219.0000000000  pop=219  Titanic (1997)
+   302  202.0000000000  pop=202  L.A. Confidential (1997)
+   357  202.0000000000  pop=202  One Flew Over the Cuckoo's Nest (1975)
+   483  197.0000000000  pop=197  Casablanca (1942)
+user 1 / pagerank:
+   258  0.0023751865  pop=307  Contact (1997)
+   286  0.0022912526  pop=279  English Patient, The (1996)
+   100  0.0022716952  pop=377  Fargo (1996)
+   313  0.0020634266  pop=219  Titanic (1997)
+   300  0.0020034195  pop=235  Air Force One (1997)
+   288  0.0018683738  pop=226  Scream (1996)
+   302  0.0017981339  pop=202  L.A. Confidential (1997)
+   294  0.0014883467  pop=182  Liar Liar (1997)
+   275  0.0012158649  pop=178  Sense and Sensibility (1995)
+   222  0.0011928167  pop=189  Star Trek: First Contact (1996)
+user 1 / ppr:
+   100  0.0006855210  pop=377  Fargo (1996)
+   258  0.0004398674  pop=307  Contact (1997)
+   286  0.0004310200  pop=279  English Patient, The (1996)
+   318  0.0004038179  pop=224  Schindler's List (1993)
+   357  0.0003771674  pop=202  One Flew Over the Cuckoo's Nest (1975)
+   483  0.0003596904  pop=197  Casablanca (1942)
+   222  0.0003327864  pop=189  Star Trek: First Contact (1996)
+   475  0.0003280910  pop=164  Trainspotting (1996)
+   275  0.0003201858  pop=178  Sense and Sensibility (1995)
+   423  0.0003056691  pop=167  E.T. the Extra-Terrestrial (1982)
+user 2 / popularity:
+   181  339.0000000000  pop=339  Return of the Jedi (1983)
+   174  312.0000000000  pop=312  Raiders of the Lost Ark (1981)
+    98  308.0000000000  pop=308  Silence of the Lambs, The (1991)
+    56  263.0000000000  pop=263  Pulp Fiction (1994)
+   172  261.0000000000  pop=261  Empire Strikes Back, The (1980)
+     7  234.0000000000  pop=234  Twelve Monkeys (1995)
+    79  230.0000000000  pop=230  Fugitive, The (1993)
+    64  228.0000000000  pop=228  Shawshank Redemption, The (1994)
+   318  224.0000000000  pop=224  Schindler's List (1993)
+   173  222.0000000000  pop=222  Princess Bride, The (1987)
+user 2 / pagerank:
+   181  0.0019889408  pop=339  Return of the Jedi (1983)
+   174  0.0015527264  pop=312  Raiders of the Lost Ark (1981)
+    98  0.0015255436  pop=308  Silence of the Lambs, The (1991)
+     7  0.0013737750  pop=234  Twelve Monkeys (1995)
+    56  0.0013726182  pop=263  Pulp Fiction (1994)
+   172  0.0013182982  pop=261  Empire Strikes Back, The (1980)
+   117  0.0013080038  pop=215  Rock, The (1996)
+   121  0.0012972894  pop=207  Independence Day (ID4) (1996)
+   268  0.0012656086  pop=146  Chasing Amy (1997)
+   222  0.0011928167  pop=189  Star Trek: First Contact (1996)
+user 2 / ppr:
+   181  0.0006973390  pop=339  Return of the Jedi (1983)
+     9  0.0004976633  pop=182  Dead Man Walking (1995)
+     7  0.0004743740  pop=234  Twelve Monkeys (1995)
+   117  0.0004563615  pop=215  Rock, The (1996)
+    98  0.0004465099  pop=308  Silence of the Lambs, The (1991)
+   121  0.0004307123  pop=207  Independence Day (ID4) (1996)
+   174  0.0004028509  pop=312  Raiders of the Lost Ark (1981)
+   268  0.0004018110  pop=146  Chasing Amy (1997)
+   475  0.0004016052  pop=164  Trainspotting (1996)
+    15  0.0004009183  pop=160  Mr. Holland's Opus (1995)

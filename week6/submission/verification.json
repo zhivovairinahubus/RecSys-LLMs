@@ -1,0 +1,69 @@
+{
+  "backend": "webgl",
+  "generated_at": "2026-10-21T01:25:33.603Z",
+  "checks": [
+    {
+      "name": "reference graph: uniform alpha=0.85 matches readme 4.1 values",
+      "status": "PASS",
+      "detail": "C>A>B>D; produced by student pageRank(alpha, {transition: REFERENCE_GRAPH.transition}), iterations 28"
+    },
+    {
+      "name": "reference graph: restart at A alpha=0.85 matches readme 4.1 values",
+      "status": "PASS",
+      "detail": "A>C>B>D (D stays 0); produced by student personalizedPageRank(seedNode, alpha, {transition: REFERENCE_GRAPH.transition})"
+    },
+    {
+      "name": "row normalization: every nonzero-degree row sums to 1",
+      "status": "PASS",
+      "detail": "6 positive-degree row(s) sum to 1; 2 dangling row(s) are zero"
+    },
+    {
+      "name": "restart distributions: nonnegative and summing to 1",
+      "status": "PASS",
+      "detail": "uniform + one-hot over 4 nodes"
+    },
+    {
+      "name": "iterations preserve total probability (sum approx 1)",
+      "status": "PASS",
+      "detail": "sum = 1.0000002682 over 3 synthetic nodes (graph.js)"
+    },
+    {
+      "name": "stationary scores are nonnegative",
+      "status": "PASS",
+      "detail": "3 scores nonnegative (graph.js)"
+    },
+    {
+      "name": "one extra update produces approximately the same distribution",
+      "status": "PASS",
+      "detail": "L1 = 7.972e-7"
+    },
+    {
+      "name": "zero-degree node fixture preserves probability mass",
+      "status": "PASS",
+      "detail": "danglingMask [false,true,false,false,true]; mass 1.00000022 / 1.00000000"
+    },
+    {
+      "name": "matrix orientation: probability collects at the pointed-to node, not the source",
+      "status": "PASS",
+      "detail": "p = [0.486486, 0.256757, 0.256757]"
+    },
+    {
+      "name": "recommendTopK: excludes previously rated movies and breaks ties by ascending id",
+      "status": "PASS",
+      "detail": "10 eligible items for user 1"
+    },
+    {
+      "name": "graph mapping: node count equals observed users plus observed movies",
+      "status": "PASS",
+      "detail": "2554 nodes = 943 users + 1611 movies"
+    },
+    {
+      "name": "public surface: every required name is defined",
+      "status": "PASS",
+      "detail": "10 functions + ALPHA_GRID + MF_INFO"
+    }
+  ],
+  "passed": 12,
+  "failed": 0,
+  "pending": 0
+}

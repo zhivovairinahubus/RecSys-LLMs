@@ -9,7 +9,7 @@
  * This is a plain (classic) script, NOT an ES module. `index.html` loads, in
  * order: the TensorFlow.js CDN runtime, `vendor/d3.min.js`, `data.js`,
  * `graph.js` and finally this file. There are exactly five script tags and no
- * inline script, so the provided MF reference lives inside this file.
+ * inline script, so the MF loading and scoring code lives inside this file.
  *
  * Globals provided by `data.js` (read, never redefined here):
  *   `movies`   `[{ id, title, genres: string[] }]`
@@ -22,18 +22,20 @@
  *   `personalizedPageRank`, `GRAPH`, `setGraph`, `getGraph`,
  *   `renderGraphView`, `fixtureStep`, `fixtureReset`, `GRAPH_VIEW_STATE`
  *
- * WHAT THE STUDENT MUST IMPLEMENT (`TODO(hw6)`, each stub throws until written):
+ * IMPLEMENTED HERE (HW6):
  *   1. `movieScores(p, graph)`                   — movie-node scores, `graph.movieIds` order.
  *   2. `recommendTopK(method, userId, K, split)` — candidate pool, exclusions, tie-breaks.
  *   3. `recallAtK(method, K, split)`             — shared-cohort Recall@K plus exclusions.
  *
- * PROVIDED (instructor scaffolding — not an exercise to rewrite):
- *   - `hw6InitTf`, the formatting/CSV/exporter helpers, the training-split indices,
- *     `popularityScores`, `mfScores` and the deterministic MF reference model,
- *     every panel renderer, the four-method / alpha-sweep / convergence /
- *     two-user-demo runners, the self-check harness and the UI wiring.
- *   - The MF reference is instructor-provided: students must not have to
- *     implement it. Report its selected checkpoint, not a hand-built model.
+ * SCAFFOLDING (unchanged): `hw6InitTf`, the formatting/CSV/exporter helpers, the
+ * training-split indices, `popularityScores`, the four-method / alpha-sweep /
+ * convergence / two-user-demo runners, the self-check harness and the UI wiring.
+ *
+ * MF MODEL: `hw6EnsureMf` loads the model selected in the previous assignment
+ * (HW5, checkpoint epoch 3) from `week6/mf_checkpoint.json` and scores with
+ * `mfScores` (`μ + p·q`). No training happens on page load. `hw6TrainMf` is the
+ * fallback used only when that file cannot be fetched; it is a deterministic
+ * in-browser reference with the HW5 batch-row L2 penalty.
  *
  * Design notes:
  *   - The graph itself (transition matrix, PageRank, PPR, dangling-mass policy)
@@ -107,7 +109,7 @@ const ALPHA_GRID = [0.50, 0.70, 0.85, 0.95];
 const HW6_K = 10;
 
 /**
- * Marker carried by every unimplemented stub error message.
+ * Marker carried by any `TODO(hw6)` path that surfaces at runtime.
  *
  * Named with the `HW6_` prefix (rather than the bare week5 `TODO_MARKER`) so a
  * same-named `const` in `graph.js` cannot cause a global-lexical redeclaration
@@ -124,29 +126,29 @@ const HW6_INTERFACE_MARK = "HW6_INTERFACE";
 const HW6_MAX_ITERATIONS = 500;
 const HW6_TOLERANCE = 1e-6;
 
-/** Dimensionality of the provided MF reference model. */
+/** Dimensionality of the MF model (HW5 checkpoint, 16 factors). */
 const MF_FACTORS = 16;
 
-/** Fixed seed for the deterministic MF reference (reproducible initialisation). */
+/** Fixed seed for the fallback in-browser MF training (reproducible). */
 const MF_SEED = 20261013;
 
-/** Training settings, keeping the previous assignment's convention. */
+/** Fallback training settings, keeping the previous assignment's convention. */
 const MF_CONFIG = { epochs: 30, lr: 0.01, reg: 0.05, batchSize: 512 };
 
 /**
- * Public description of the provided MF reference model, filled in when the
- * model is trained. The report must state the model and checkpoint actually
- * used, so these fields are the record.
+ * Public description of the MF model, filled in when the checkpoint is loaded
+ * (or the fallback finishes training). The report must state the model and
+ * checkpoint actually used, so these fields are the record.
  *
- * `trainedAt` is the lazy-training marker: it stays `null` until the reference
- * has actually been trained, so "not trained yet" is a truthful, checkable flag
- * rather than an inference from a zero score. `checkpoint` stays `null` while
- * untrained.
+ * `trainedAt` is the availability marker: it stays `null` until a model is in
+ * place, so "MF unavailable" is a truthful, checkable flag rather than an
+ * inference from a zero score. `checkpoint` stays `null` while unavailable.
  *
  * @type {{factors:number, epochs:number, learningRate:number,
  *         regularization:number, batchSize:number, seed:number,
  *         backend:(string|null), checkpoint:(number|null),
- *         validationRMSE:(number|null), trainedAt:(string|null),
+ *         validationRMSE:(number|null), testRMSE:(number|null),
+ *         source:(string|null), trainedAt:(string|null),
  *         history:Array<Object>}}
  */
 const MF_INFO = {
@@ -159,6 +161,8 @@ const MF_INFO = {
   backend: null,
   checkpoint: null,
   validationRMSE: null,
+  testRMSE: null,
+  source: null,
   trainedAt: null,
   history: [],
 };
@@ -171,16 +175,16 @@ const MF_INFO = {
  */
 
 /**
- * Provided MF reference model, or `null` until the lazy `hw6EnsureMf()` has
- * actually trained it. Nothing MF-related runs on page load.
+ * MF model in use, or `null` until `hw6EnsureMf()` has loaded the HW5 checkpoint
+ * (or the fallback finished). Nothing MF-related runs on page load.
  *
  * @type {MfModel|null}
  */
 let HW6_MF_MODEL = null;
 
 /**
- * In-flight MF training promise. A second need while training is running
- * awaits the same promise instead of starting a second training pass.
+ * In-flight MF setup promise. A second need while loading is running
+ * awaits the same promise instead of starting a second load/training pass.
  *
  * @type {Promise<MfModel|null>|null}
  */
@@ -385,6 +389,7 @@ function hw6SetAlpha(value) {
 function hw6InvalidateCaches() {
   HW6_STATE.pageRank = null;
   HW6_STATE.ppr = null;
+  hw6ClearPprScoreCache();
   const viewState = typeof GRAPH_VIEW_STATE !== "undefined" ? GRAPH_VIEW_STATE : null;
   if (viewState && typeof viewState === "object" && "stale" in viewState) {
     viewState.stale = true;
@@ -403,8 +408,8 @@ function hw6SetStatus(message) {
 }
 
 /**
- * Render a readable "not available yet" state that distinguishes an
- * unimplemented stub from a genuine failure from an interface gap.
+ * Render a readable "not available yet" state that distinguishes a reached
+ * `TODO(hw6)` path from a genuine failure from an interface gap.
  *
  * @param {string} what Human label, e.g. "Recommendations".
  * @param {*} error     Thrown value (consumed defensively).
@@ -759,16 +764,19 @@ function hw6CohortExclusions(splitName) {
 }
 
 // ---------------------------------------------------------------------------
-// Provided matrix-factorization reference (instructor scaffolding)
+// Matrix factorization: HW5 checkpoint loader + fallback trainer
 //
-// A 16-dimensional dot-product MF with a global mean, trained on the same
-// chronological split, using `tf.train.adam`, checkpointed by validation RMSE
-// (ties resolved toward the earliest epoch). It is deterministic: factors are
-// initialised from a seeded PRNG and the mini-batch order is drawn from the same
-// generator, so two runs on the same data produce the same model.
+// The model the report names is the one selected in the previous assignment
+// (HW5, checkpoint epoch 3), loaded from `week6/mf_checkpoint.json` by
+// `hw6LoadMfCheckpoint`. The in-browser trainer below is the FALLBACK, used only
+// when that file cannot be fetched.
 //
-// This block is NOT part of the homework stubs. Students report the checkpoint
-// recorded in `MF_INFO`; they do not rebuild the model.
+// The fallback is a 16-dimensional dot-product MF with a global mean, trained on
+// the same chronological split, using `tf.train.adam` with the HW5 batch-row L2
+// penalty (`reg` times the mean over the batch rows), checkpointed by validation
+// RMSE (ties resolved toward the earliest epoch). It is deterministic: factors
+// are initialised from a seeded PRNG and the mini-batch order is drawn from the
+// same generator, so two runs on the same data produce the same model.
 // ---------------------------------------------------------------------------
 
 /**
@@ -790,7 +798,7 @@ function hw6Mulberry32(seed) {
 }
 
 /**
- * Dispose the provided MF variables so repeated training does not leak memory.
+ * Dispose the MF variables so repeated use does not leak memory.
  *
  * @returns {void}
  */
@@ -806,7 +814,11 @@ function hw6DisposeMf() {
 }
 
 /**
- * Batched training RMSE for a split, using the provided MF variables.
+ * Batched RMSE for a split, using the MF variables.
+ *
+ * The prediction is clamped into `[1, 5]` before differencing, matching the
+ * previous assignment's `computeRMSEFor`; the unclamped dot product is used only
+ * for ranking (`mfScores`). This is the number that selects the checkpoint.
  *
  * @param {Rating[]} split
  * @returns {number} RMSE, or `NaN` when the model is unavailable.
@@ -829,44 +841,57 @@ function hw6MfRmse(split) {
     }
     const u = tf.gather(model.userFactors, tf.tensor1d(userIds, "int32"));
     const i = tf.gather(model.itemFactors, tf.tensor1d(movieIds, "int32"));
-    const pred = tf.sum(tf.mul(u, i), 1).add(model.globalMean);
+    const pred = tf.clipByValue(tf.sum(tf.mul(u, i), 1).add(model.globalMean), 1, 5);
     const diff = pred.sub(tf.tensor1d(actual, "float32"));
     return Math.sqrt(tf.mean(diff.square()).dataSync()[0]);
   });
 }
 
 /**
- * Train the provided MF reference at most once (idempotent, lazy). Nothing here
- * runs on page load: the first caller that actually needs MF scores triggers it,
- * and every later caller reuses the cached model.
+ * Ensure the previous assignment's selected MF model is available, at most once
+ * (idempotent, lazy). Nothing here runs on page load: the first caller that
+ * actually needs MF scores triggers it, and every later caller reuses the model.
  *
- * The training pass is asynchronous and `await`s the next animation frame after
- * every epoch, so the page keeps painting and the `#status` line can report
- * progress instead of freezing for minutes. Concurrent callers share one
- * in-flight promise, so a second need never starts a second training run.
+ * The primary source is the committed checkpoint `week6/mf_checkpoint.json`
+ * (the HW5 model at its best validation epoch 3), loaded over `fetch`. Loading
+ * is fast, so the page never spends the ~168 s the HW5 training took. Only when
+ * that file cannot be fetched or parsed does this fall back to training the
+ * built-in reference in the browser (`hw6TrainMf`).
  *
- * Deterministic; leaves the best-validation variables in place. `MF_INFO.trainedAt`
- * is set only on success, and `checkpoint` stays `null` while untrained.
+ * Concurrent callers share one in-flight promise, so a second need never starts a
+ * second load. `MF_INFO.trainedAt` is set only on success; `checkpoint` stays
+ * `null` while unavailable.
  *
- * @returns {Promise<MfModel|null>} The trained model, or `null` when the data or
- *   the TensorFlow.js runtime is not ready, or when training throws.
+ * @returns {Promise<MfModel|null>} The model, or `null` when the data or the
+ *   TensorFlow.js runtime is not ready, or when both loading and training fail.
  */
 function hw6EnsureMf() {
   if (HW6_MF_TRAINING) return HW6_MF_TRAINING;
   if (HW6_MF_MODEL && MF_INFO.trainedAt !== null) return Promise.resolve(HW6_MF_MODEL);
   if (typeof tf === "undefined" || !HW6_STATE.splitReady) return Promise.resolve(null);
-  const train = HW6_SPLIT.train;
-  if (train.length === 0) return Promise.resolve(null);
 
-  HW6_MF_TRAINING = hw6TrainMf(train).then(
+  HW6_MF_TRAINING = hw6LoadMfCheckpoint().then(
+    function (model) {
+      if (model) {
+        HW6_MF_TRAINING = null;
+        return model;
+      }
+      // Fallback: the checkpoint file is unavailable, so train in the browser.
+      const train = HW6_SPLIT.train;
+      if (train.length === 0) {
+        HW6_MF_TRAINING = null;
+        return null;
+      }
+      return hw6TrainMf(train);
+    },
+  ).then(
     function (model) {
       HW6_MF_TRAINING = null;
       return model;
     },
     function (error) {
       HW6_MF_TRAINING = null;
-      console.error("MF reference training failed:", error);
-      // Cover failures raised before the inner try (variable / tensor setup).
+      console.error("MF reference setup failed:", error);
       hw6DisposeMf();
       MF_INFO.checkpoint = null;
       MF_INFO.validationRMSE = null;
@@ -875,6 +900,77 @@ function hw6EnsureMf() {
     },
   );
   return HW6_MF_TRAINING;
+}
+
+/**
+ * Load the previous assignment's selected model from `week6/mf_checkpoint.json`.
+ *
+ * The file carries `{ globalMean, userShape, itemShape, userFactors, itemFactors }`
+ * with row index = raw id (users `[0, numUsers]`, movies `[0, maxMovieId]`). On
+ * success this fills `HW6_MF_MODEL` and records the HW5 settings in `MF_INFO`,
+ * then recomputes the validation and test RMSE with the clamped prediction.
+ *
+ * @returns {Promise<MfModel|null>} The loaded model, or `null` on any failure
+ *   (network, JSON, or shape mismatch) so the caller can fall back to training.
+ */
+async function hw6LoadMfCheckpoint() {
+  try {
+    const response = await fetch("mf_checkpoint.json", { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data || !Array.isArray(data.userFactors) || !Array.isArray(data.itemFactors)) return null;
+    if (!Array.isArray(data.userShape) || !Array.isArray(data.itemShape)) return null;
+
+    const F = Number(data.userShape[1]);
+    const uRows = Number(data.userShape[0]);
+    const iRows = Number(data.itemShape[0]);
+    if (!Number.isFinite(F) || !Number.isFinite(uRows) || !Number.isFinite(iRows)) return null;
+    if (data.userFactors.length !== uRows || data.itemFactors.length !== iRows) return null;
+
+    const uFlat = new Float32Array(uRows * F);
+    const iFlat = new Float32Array(iRows * F);
+    for (let u = 0; u < uRows; u++) {
+      const row = data.userFactors[u];
+      if (!Array.isArray(row) || row.length !== F) return null;
+      for (let f = 0; f < F; f++) uFlat[u * F + f] = row[f];
+    }
+    for (let m = 0; m < iRows; m++) {
+      const row = data.itemFactors[m];
+      if (!Array.isArray(row) || row.length !== F) return null;
+      for (let f = 0; f < F; f++) iFlat[m * F + f] = row[f];
+    }
+
+    hw6DisposeMf();
+    const vars = tf.tidy(function () {
+      return {
+        userFactors: tf.variable(tf.tensor2d(uFlat, [uRows, F])),
+        itemFactors: tf.variable(tf.tensor2d(iFlat, [iRows, F])),
+      };
+    });
+    HW6_MF_MODEL = {
+      userFactors: vars.userFactors,
+      itemFactors: vars.itemFactors,
+      globalMean: Number(data.globalMean),
+    };
+
+    // Record the HW5 model and its settings (this is the model the report names).
+    MF_INFO.factors = F;
+    MF_INFO.epochs = 20;
+    MF_INFO.learningRate = 0.01;
+    MF_INFO.regularization = 0.05;
+    MF_INFO.batchSize = 64;
+    MF_INFO.seed = 2025;
+    MF_INFO.backend = HW6_STATE.backend;
+    MF_INFO.checkpoint = 3;
+    MF_INFO.source = "week6/mf_checkpoint.json (HW5 model, best validation epoch 3)";
+    MF_INFO.validationRMSE = hw6MfRmse(HW6_SPLIT.val);
+    MF_INFO.testRMSE = hw6MfRmse(HW6_SPLIT.test);
+    MF_INFO.trainedAt = new Date().toISOString();
+    MF_INFO.history = [];
+    return HW6_MF_MODEL;
+  } catch (error) {
+    return null;
+  }
 }
 
 /**
@@ -909,11 +1005,17 @@ async function hw6TrainMf(train) {
   for (let i = 0; i < train.length; i++) globalMean += train[i].rating;
   globalMean /= train.length;
 
-  const userFactors = tf.variable(tf.tensor2d(uData, [userRows, F]));
-  const itemFactors = tf.variable(tf.tensor2d(iData, [itemRows, F]));
+  const vars = tf.tidy(function () {
+    return {
+      userFactors: tf.variable(tf.tensor2d(uData, [userRows, F])),
+      itemFactors: tf.variable(tf.tensor2d(iData, [itemRows, F])),
+    };
+  });
+  const userFactors = vars.userFactors;
+  const itemFactors = vars.itemFactors;
   HW6_MF_MODEL = { userFactors: userFactors, itemFactors: itemFactors, globalMean: globalMean };
 
-  const optimizer = tf.train.adam(MF_CONFIG.lr);
+  const optimizer = tf.train.adam(MF_CONFIG.lr, 0.9, 0.999, 1e-7);
   const order = new Int32Array(train.length);
   for (let i = 0; i < order.length; i++) order[i] = i;
 
@@ -950,8 +1052,11 @@ async function hw6TrainMf(train) {
               const it = tf.gather(itemFactors, tf.tensor1d(iIdx, "int32"));
               const pred = tf.sum(tf.mul(u, it), 1).add(globalMean);
               const mse = tf.losses.meanSquaredError(tf.tensor1d(target, "float32"), pred);
-              const l2 = userFactors.square().sum().add(itemFactors.square().sum()).mul(MF_CONFIG.reg);
-              return mse.add(l2);
+              // HW5 penalty: the mean over the BATCH rows only. Summing over the
+              // whole matrices here would dominate the MSE gradient by orders of
+              // magnitude and drive every factor to zero (predicting the mean).
+              const penalty = tf.mean(tf.sum(u.square(), 1).add(tf.sum(it.square(), 1)));
+              return mse.add(penalty.mul(MF_CONFIG.reg));
             });
           },
           true,
@@ -973,7 +1078,7 @@ async function hw6TrainMf(train) {
       // Announce progress and hand control back to the browser so the UI paints
       // between epochs instead of blocking the main thread.
       hw6SetStatus(
-        "Training MF reference: epoch " + epoch + "/" + MF_CONFIG.epochs +
+        "Training fallback MF: epoch " + epoch + "/" + MF_CONFIG.epochs +
         " \u2014 validation RMSE " + hw6Fmt(valRmse) + "\u2026",
       );
       if (typeof tf.nextFrame === "function") {
@@ -1001,10 +1106,12 @@ async function hw6TrainMf(train) {
     MF_INFO.backend = HW6_STATE.backend;
     MF_INFO.checkpoint = bestEpoch || null;
     MF_INFO.validationRMSE = Number.isFinite(bestVal) ? bestVal : null;
+    MF_INFO.testRMSE = hw6MfRmse(HW6_SPLIT.test);
+    MF_INFO.source = "in-browser fallback training (hw6TrainMf)";
     MF_INFO.trainedAt = new Date().toISOString();
     return HW6_MF_MODEL;
   } catch (error) {
-    console.error("MF reference training failed:", error);
+    console.error("Fallback MF training failed:", error);
     hw6DisposeMf();
     MF_INFO.checkpoint = null;
     MF_INFO.validationRMSE = null;
@@ -1014,10 +1121,10 @@ async function hw6TrainMf(train) {
 }
 
 /**
- * Ensure the lazy MF reference is trained, reporting "not trained yet" honestly
- * when it cannot be (TensorFlow.js missing, data not ready, or a training
- * failure). This is the single entry point every MF need goes through; it never
- * trains on page load.
+ * Ensure an MF model is available. The primary source is the HW5 checkpoint
+ * loaded from `week6/mf_checkpoint.json`; only when that fails does it fall back
+ * to in-browser training. This is the single entry point every MF need goes
+ * through; nothing MF-related runs on page load.
  *
  * @returns {Promise<MfModel|null>}
  */
@@ -1025,29 +1132,29 @@ async function hw6EnsureMfForNeed() {
   if (HW6_MF_MODEL && MF_INFO.trainedAt !== null) return HW6_MF_MODEL;
   if (typeof tf === "undefined") return null;
   if (!HW6_STATE.splitReady) return null;
-  hw6SetStatus("MF reference is not trained yet \u2014 training it now\u2026");
+  hw6SetStatus("Loading MF model\u2026");
   const model = await hw6EnsureMf();
   if (model && MF_INFO.checkpoint !== null) {
     hw6SetStatus(
-      "MF reference trained: " + MF_INFO.factors + " factors, checkpoint epoch " + MF_INFO.checkpoint +
+      "MF ready: " + MF_INFO.factors + " factors, checkpoint epoch " + MF_INFO.checkpoint +
       ", validation RMSE " + hw6Fmt(MF_INFO.validationRMSE) + ".",
     );
   } else {
-    hw6SetStatus("MF reference is not trained yet \u2014 its scores and recall are not meaningful until it is.");
+    hw6SetStatus("MF is unavailable \u2014 its scores and recall are not meaningful until a model loads.");
   }
   return model;
 }
 
 /**
- * Provided MF scorer: predicted scores for the training-movie candidate pool.
+ * MF scorer: predicted scores for the training-movie candidate pool.
  *
- * Scores are dot products plus the global training mean, on the same scale as
- * the previous assignment's model. They are NOT comparable to PPR walk
+ * Scores are dot products plus the global training mean (`μ + p·q`), on the same
+ * scale as the previous assignment's model, and are NOT comparable to PPR walk
  * probabilities.
  *
  * @param {number} userId Raw user id.
  * @returns {Object<number, number>} `movieId -> score`; empty when the model is
- *   untrained or the user row does not exist.
+ *   unavailable or the user row does not exist.
  */
 function mfScores(userId) {
   const out = {};
@@ -1071,12 +1178,9 @@ function mfScores(userId) {
 }
 
 // ---------------------------------------------------------------------------
-// Student stubs (TODO(hw6))
+// Scoring core (implemented): movieScores / recommendTopK / recallAtK
 //
-// Each stub below throws until you implement it. Keep the signature, fill in the
-// body, and update the JSDoc contract notes if your design differs.
-//
-// Provided helpers you will want:
+// Useful helpers:
 //   `HW6_STATE.candidateIds`  ascending training-movie ids (the candidate pool)
 //   `HW6_STATE.candidateSet`  `Set` view of the pool
 //   `hw6PopularityOf(id)`     training popularity of one movie
@@ -1088,7 +1192,7 @@ function mfScores(userId) {
 /**
  * Extract movie-node scores from a full propagation vector.
  *
- * TODO(hw6): implement this. Readme section 5 requires movie-node scores only.
+ * Readme section 5 requires movie-node scores only.
  *
  * Contract:
  *  - `p` is the node-probability vector produced by `pageRank` /
@@ -1102,22 +1206,42 @@ function mfScores(userId) {
  *    `p[userNodeCount + k]`.
  *  - Never add a padding node: the output length is exactly
  *    `graph.movieIds.length`.
- *  - Throw the `TODO(hw6)` error until implemented; do not return zeros, because
- *    a silent zero vector makes every downstream metric look valid when it is not.
  *
  * @param {ArrayLike<number>} p Node probabilities, indexed by graph node index.
  * @param {Object} graph        Graph object from `graph.js`.
  * @returns {Float64Array} Movie scores in `graph.movieIds` order.
  */
 function movieScores(p, graph) {
-  // TODO(hw6): select the movie-node entries of `p`, in `graph.movieIds` order.
-  throw new Error("TODO(hw6): movieScores is not implemented yet.");
+  if (!p || typeof p.length !== "number") {
+    throw hw6InterfaceError("movieScores received no node-probability vector");
+  }
+  if (!graph) {
+    throw hw6InterfaceError("movieScores received no graph");
+  }
+  const movieCount = hw6MovieIds(graph).length;
+  const out = new Float64Array(movieCount);
+  // `graph.movieNodes` (explicit global node indices) is preferred when present;
+  // otherwise user nodes occupy [0, userCount) and movie node k is userCount + k.
+  const movieNodes = Array.isArray(graph.movieNodes) ? graph.movieNodes : null;
+  if (movieNodes) {
+    for (let k = 0; k < movieCount; k++) {
+      const node = Number(movieNodes[k]);
+      out[k] = Number.isFinite(node) && node >= 0 && node < p.length ? Number(p[node]) : Number.NEGATIVE_INFINITY;
+    }
+    return out;
+  }
+  const offset = hw6UserIds(graph).length;
+  for (let k = 0; k < movieCount; k++) {
+    const node = offset + k;
+    out[k] = node < p.length ? Number(p[node]) : Number.NEGATIVE_INFINITY;
+  }
+  return out;
 }
 
 /**
  * Recommend the top-K movies for a user with one of the four methods.
  *
- * TODO(hw6): implement this. Readme section 5 defines the rules.
+ * Readme section 5 defines the rules.
  *
  * Contract:
  *  - `method` is one of `"popularity"`, `"pagerank"`, `"ppr"`, `"mf"`.
@@ -1148,14 +1272,171 @@ function movieScores(p, graph) {
  * @returns {RecommendedMovie[]}
  */
 function recommendTopK(method, userId, K, split) {
-  // TODO(hw6): filter the candidate pool, sort by score desc / id asc, slice to K.
-  throw new Error("TODO(hw6): recommendTopK is not implemented yet.");
+  const topK = K === undefined ? 10 : Number(K);
+  if (methods.indexOf(method) === -1) return [];
+  if (!Number.isFinite(topK) || topK <= 0) return [];
+
+  const ids = HW6_STATE.candidateIds;
+  if (!ids.length) return [];
+
+  const scores = new Float64Array(ids.length);
+  if (method === "popularity") {
+    for (let i = 0; i < ids.length; i++) scores[i] = hw6PopularityOf(ids[i]);
+  } else if (method === "pagerank") {
+    const graph = hw6ActiveGraph();
+    if (!graph) return [];
+    const perMovie = hw6PagerankMovieScores(graph, hw6ReadAlpha());
+    hw6FillCandidateScores(scores, graph, perMovie);
+  } else if (method === "ppr") {
+    const graph = hw6ActiveGraph();
+    if (!graph) return [];
+    const perMovie = hw6PprMovieScores(graph, userId, hw6ReadAlpha());
+    if (!perMovie) return [];
+    hw6FillCandidateScores(scores, graph, perMovie);
+  } else if (method === "mf") {
+    const scored = mfScores(userId);
+    for (let i = 0; i < ids.length; i++) {
+      const value = scored[ids[i]];
+      scores[i] = value === undefined ? Number.NEGATIVE_INFINITY : value;
+    }
+  }
+
+  const excluded = hw6ExclusionSet(split === "val" ? "val" : "test", userId);
+  const order = [];
+  for (let i = 0; i < ids.length; i++) {
+    if (excluded.has(ids[i])) continue;
+    order.push(i);
+  }
+  order.sort(function (a, b) {
+    const sa = scores[a];
+    const sb = scores[b];
+    if (sa > sb) return -1;
+    if (sa < sb) return 1;
+    return ids[a] - ids[b];
+  });
+
+  const recs = [];
+  for (let r = 0; r < order.length && recs.length < topK; r++) {
+    const i = order[r];
+    recs.push({
+      movieId: ids[i],
+      title: hw6Title(ids[i]),
+      genres: hw6Genres(ids[i]),
+      score: scores[i],
+      popularity: hw6PopularityOf(ids[i]),
+    });
+  }
+  return recs;
 }
+
+/**
+ * Candidate-aligned movie scores for global PageRank, reusing the cached
+ * propagation result from `hw6RunPageRank` (readme 5).
+ *
+ * @param {Object} graph
+ * @param {number} alpha
+ * @returns {Float64Array} Movie-node scores in `graph.movieIds` order.
+ */
+function hw6PagerankMovieScores(graph, alpha) {
+  const result = hw6RunAndRecordConvergence("pagerank", graph, alpha);
+  return movieScores(result.scores, graph);
+}
+
+/**
+ * Candidate-aligned movie scores for PPR at the current alpha.
+ *
+ * The `recallAtK("ppr", ...)` bulk path primes {@link HW6_PPR_SCORE_CACHE} with
+ * whole-cohort `personalizedPageRankBatch` results, keyed by
+ * `(graph, alpha, userId)`, so per-user `recommendTopK` calls never re-run the
+ * walk for one user. A cache miss falls back to a single `hw6RunPPR` call.
+ *
+ * @param {Object} graph
+ * @param {number} userId
+ * @param {number} alpha
+ * @returns {Float64Array|null}
+ */
+function hw6PprMovieScores(graph, userId, alpha) {
+  const key = hw6PprCacheKey(graph, alpha, userId);
+  if (HW6_PPR_SCORE_CACHE.has(key)) return HW6_PPR_SCORE_CACHE.get(key);
+  try {
+    const result = hw6RunAndRecordConvergence("ppr", graph, alpha, userId);
+    return movieScores(result.scores, graph);
+  } catch (error) {
+    return null;
+  }
+}
+
+/** `Set`/cache key for the PPR per-user movie-score cache. */
+const HW6_PPR_SCORE_CACHE = new Map();
+
+/**
+ * Identity key for one PPR result: graph object identity, alpha and user id.
+ *
+ * @param {Object} graph
+ * @param {number} alpha
+ * @param {number} userId
+ * @returns {string}
+ */
+function hw6PprCacheKey(graph, alpha, userId) {
+  return hw6GraphIdentity(graph) + "|" + Number(alpha).toFixed(4) + "|" + Number(userId);
+}
+
+/** Monotonic id stamped on each new graph object, for cache-key identity. */
+let graphKey = 0;
+/** Last graph object seen by the identity tracker. */
+let graphKeyGraph = null;
+
+/**
+ * Stable identity string for a graph object.
+ *
+ * A new object (a rebuilt graph) bumps the counter, so caches keyed on the
+ * returned string can never collide across two different graph instances.
+ *
+ * @param {Object} graph
+ * @returns {string}
+ */
+function hw6GraphIdentity(graph) {
+  if (graph !== graphKeyGraph) {
+    graphKey++;
+    graphKeyGraph = graph;
+  }
+  return "g" + graphKey;
+}
+
+/**
+ * Clear the per-user PPR cache (called on alpha change and graph rebuild).
+ *
+ * @returns {void}
+ */
+function hw6ClearPprScoreCache() {
+  HW6_PPR_SCORE_CACHE.clear();
+}
+
+/**
+ * Copy movie-node scores into a candidate-aligned score vector.
+ *
+ * @param {Float64Array} scores Candidate-aligned output (mutated).
+ * @param {Object} graph
+ * @param {ArrayLike<number>} perMovie Movie scores in `graph.movieIds` order.
+ * @returns {void}
+ */
+function hw6FillCandidateScores(scores, graph, perMovie) {
+  const index = hw6MovieLocalIndex(graph);
+  const ids = HW6_STATE.candidateIds;
+  for (let i = 0; i < ids.length; i++) {
+    const position = index.get(ids[i]);
+    const value = position === undefined ? NaN : Number(perMovie[position]);
+    scores[i] = Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
+  }
+}
+
+/** The four supported methods. */
+const methods = ["popularity", "pagerank", "ppr", "mf"];
 
 /**
  * Recall@K for one method over the shared evaluation cohort.
  *
- * TODO(hw6): implement this. Readme sections 7.1 and 7.2 define the protocol.
+ * Readme sections 7.1 and 7.2 define the protocol.
  *
  * Contract:
  *  - Cohort: use `hw6SharedCohort(split)` so all four methods report the exact
@@ -1181,8 +1462,97 @@ function recommendTopK(method, userId, K, split) {
  * @returns {RecallReport}
  */
 function recallAtK(method, K, split) {
-  // TODO(hw6): macro-average Recall@K over the shared cohort, with exclusions.
-  throw new Error("TODO(hw6): recallAtK is not implemented yet.");
+  const topK = K === undefined ? HW6_K : Number(K);
+  const name = split === "val" ? "val" : "test";
+  const cohort = hw6SharedCohort(name);
+  const exclusions = hw6CohortExclusions(name);
+  const report = {
+    recall: 0,
+    cohort: cohort,
+    excludedUnseen: exclusions.excludedUnseen,
+    excludedNoEligible: exclusions.excludedNoEligible,
+    perUser: [],
+  };
+  if (methods.indexOf(method) === -1) return report;
+  if (cohort.length === 0) return report;
+
+  if (method === "ppr") {
+    // Prime the whole cohort in one batched walk so per-user top-K lookups are
+    // cache hits rather than one PPR per user (readme 7.1/7.2).
+    hw6PrimePprCohort(cohort, hw6ReadAlpha());
+  }
+
+  const grades = HW6_STATE.gradesBySplit[name];
+  let recallSum = 0;
+  let cohortUsers = 0;
+
+  for (let c = 0; c < cohort.length; c++) {
+    const userId = cohort[c];
+    const gradeMap = grades.get(userId);
+    const excluded = hw6ExclusionSet(name, userId);
+    const relevantSet = new Set();
+    if (gradeMap) {
+      gradeMap.forEach(function (rating, movieId) {
+        if (rating >= 4.0 && HW6_STATE.candidateSet.has(movieId) && !excluded.has(movieId)) {
+          relevantSet.add(movieId);
+        }
+      });
+    }
+    const relevant = relevantSet.size;
+    let hit = 0;
+    if (relevant > 0) {
+      const recs = recommendTopK(method, userId, topK, name);
+      for (let i = 0; i < recs.length; i++) {
+        if (relevantSet.has(recs[i].movieId)) hit++;
+      }
+      recallSum += hit / relevant;
+      cohortUsers++;
+    }
+    report.perUser.push({ userId: userId, relevant: relevant, hit: hit });
+  }
+
+  report.recall = cohortUsers > 0 ? recallSum / cohortUsers : 0;
+  return report;
+}
+
+/**
+ * Fill the per-user PPR movie-score cache for the whole cohort at once.
+ *
+ * Node indices come from `hw6UserNodeIndex`; a node that cannot be mapped is
+ * skipped (its user simply falls back to a single adaptive walk). The result is
+ * keyed by `(graph, alpha, userId)` so `recommendTopK("ppr", ...)` finds it.
+ *
+ * @param {number[]} cohort Ascending user ids.
+ * @param {number} alpha
+ * @returns {void}
+ */
+function hw6PrimePprCohort(cohort, alpha) {
+  if (typeof personalizedPageRankBatch !== "function") return;
+  const graph = hw6ActiveGraph();
+  if (!graph) return;
+  const nodeIndices = [];
+  const users = [];
+  for (let i = 0; i < cohort.length; i++) {
+    const node = hw6UserNodeIndex(graph, cohort[i]);
+    if (node < 0) continue;
+    nodeIndices.push(node);
+    users.push(cohort[i]);
+  }
+  if (!nodeIndices.length) return;
+  try {
+    const batch = hw6WithActiveGraph(graph, function () {
+      return personalizedPageRankBatch(nodeIndices, alpha);
+    });
+    if (!batch || !Array.isArray(batch.vectors)) return;
+    for (let i = 0; i < users.length; i++) {
+      const vector = batch.vectors[i];
+      if (!vector) continue;
+      const key = hw6PprCacheKey(graph, alpha, users[i]);
+      HW6_PPR_SCORE_CACHE.set(key, movieScores(vector, graph));
+    }
+  } catch (error) {
+    // A failed batch is not fatal: per-user lookups fall back to hw6RunPPR.
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1550,8 +1920,8 @@ function hw6RunPPR(graph, userId, alpha) {
  * aligned to `HW6_STATE.candidateIds`. Scores for movies the method cannot place
  * are `-Infinity`, so they sort last and never enter a top-K list by accident.
  *
- * `pagerank` / `ppr` route through `movieScores`, which is a student stub: this
- * helper therefore throws the `TODO(hw6)` error until the stub is implemented.
+ * `pagerank` / `ppr` route through `movieScores`; a `TODO(hw6)` path reached
+ * here would throw and surface as a PENDING panel rather than a silent zero.
  *
  * @param {string} method
  * @param {number} userId
@@ -1698,7 +2068,7 @@ function hw6ConvergenceVerdict(record) {
  *
  * @param {"test"|"val"} [split="test"] Evaluation split.
  * @returns {Promise<Array<Object>>} One row per method; rows carry an `error`
- *   field when the method could not be evaluated (unimplemented stub or
+ *   field when the method could not be evaluated (reached `TODO(hw6)` path or
  *   interface gap).
  */
 async function hw6RunComparison(split) {
@@ -1733,8 +2103,8 @@ async function hw6RunComparison(split) {
     };
     try {
       if (method === "mf" && !mfReady) {
-        // Never report a silent 0: state plainly that the reference is untrained.
-        row.note = "MF not trained yet \u2014 its recall is not meaningful.";
+        // Never report a silent 0: state plainly that the model is unavailable.
+        row.note = "MF unavailable \u2014 its recall is not meaningful.";
       } else {
         const report = recallAtK(method, HW6_K, name);
         row.recall = Number(report.recall);
@@ -1848,7 +2218,7 @@ function hw6WithAlpha(value, fn) {
  * alpha only (user A, alpha 0.50). Exactly one factor changes per comparison.
  *
  * @returns {Object} `{ error, users, settings, common }`; `error` is set when
- *   the demonstration cannot run (unimplemented stub or a missing cohort).
+ *   the demonstration cannot run (reached `TODO(hw6)` path or a missing cohort).
  */
 function hw6RunTwoUserDemo() {
   const cohort = hw6SharedCohort("test");
@@ -2320,7 +2690,7 @@ async function hw6RenderRecommendations() {
   }
   if (method === "mf" && (HW6_MF_MODEL === null || MF_INFO.trainedAt === null)) {
     target.innerHTML =
-      '<p class="empty-state">The provided MF reference is not trained yet and could not be trained, so its scores ' +
+      '<p class="empty-state">The MF model could not be loaded, so its scores ' +
       "are unavailable. Check the TensorFlow.js status above.</p>";
     return;
   }
@@ -2442,11 +2812,11 @@ function hw6PopulateUserSelects() {
  * True when `graph.js`'s propagation helpers are actually implemented.
  *
  * Probes `rowNormalize(REFERENCE_GRAPH)` once and requires a usable
- * `{ Q: number[][], danglingMask: boolean[] }`. An unimplemented `TODO(hw6)`
- * stub, a throw, or an unusable return all count as "not ready", which makes the
+ * `{ Q: number[][], danglingMask: boolean[] }`. A `TODO(hw6)` path, a throw, or
+ * an unusable return all count as "not ready", which makes the
  * dependent checks PENDING. This is what stops the harness from reporting PASS
  * for a formula it verified itself while the application's own implementation is
- * still a stub.
+ * still a `TODO(hw6)` path.
  *
  * @returns {boolean}
  */
@@ -3175,7 +3545,7 @@ function runSelfChecks(logElement) {
   const lines = [
     "HW6 self-checks \u2014 pass " + passed + ", fail " + failed + ", pending " + pendingCount + " (of " + checks.length + ")",
     "backend: " + (HW6_STATE.backend || "unknown"),
-    "MF reference: " + (MF_INFO.checkpoint === null ? "not trained yet" : "factors " + MF_INFO.factors + ", checkpoint epoch " + MF_INFO.checkpoint + ", val RMSE " + hw6Fmt(MF_INFO.validationRMSE)),
+    "MF model: " + (MF_INFO.checkpoint === null ? "not loaded yet (loads on first MF need)" : "factors " + MF_INFO.factors + ", checkpoint epoch " + MF_INFO.checkpoint + ", val RMSE " + hw6Fmt(MF_INFO.validationRMSE)),
     "",
   ];
   checks.forEach(function (c) {
@@ -3417,9 +3787,9 @@ function hw6HandleBuildGraph() {
  *
  * Returns a `Float64Array` indexed by graph node index (users first, then
  * movies): user nodes contribute 0, movie nodes carry the selected method's
- * score. Returns `null` when the scores cannot be produced (for example while
- * `movieScores` is still a `TODO(hw6)` stub), so the caller can fall back to
- * degree colouring without throwing.
+ * score. Returns `null` when the scores cannot be produced (for example when a
+ * `TODO(hw6)` path is reached), so the caller can fall back to degree colouring
+ * without throwing.
  *
  * @param {Object} graph
  * @param {number} seedUserId
@@ -3564,7 +3934,7 @@ function hw6HandleRunPPR() {
 /**
  * Run the whole retrieval evaluation: four-method comparison, validation alpha
  * sweep and the recall detail for the selected method. Every panel degrades to
- * a readable state while the stubs are unimplemented.
+ * a readable state if a `TODO(hw6)` path is reached.
  *
  * The two-user demonstration is NOT part of this run: it has its own control
  * (`#two-user-demo-btn`) and its own output container (`#two-user-demo-results`).
@@ -3617,7 +3987,8 @@ async function hw6HandleRecall() {
 /**
  * Run the validation-only PPR alpha sweep (readme section 6.1) and render it
  * into `#alpha-sweep-results`, reporting the selected alpha (exact ties toward
- * the smaller alpha). Degrades to a readable explanation while the stubs throw.
+ * the smaller alpha). Degrades to a readable explanation if a `TODO(hw6)` path
+ * throws.
  *
  * @returns {void}
  */
@@ -3639,7 +4010,7 @@ function hw6HandleAlphaSweep() {
 /**
  * Run the readme section 6.2 one-factor-at-a-time two-user demonstration and
  * render it into `#two-user-demo-results` (its only output target). Degrades to
- * a readable explanation while the stubs throw.
+ * a readable explanation if a `TODO(hw6)` path throws.
  *
  * @returns {void}
  */
@@ -3749,13 +4120,13 @@ function hw6WireControls() {
 
 /**
  * Select the backend, load the data, split it chronologically, build the
- * provided indices, render the summaries and wire the controls.
+ * training-split indices, render the summaries and wire the controls.
  *
- * NOTHING MF-related is computed here. The provided MF reference is trained
- * lazily, on the first need only (switching the method to `mf`, pressing
- * "Recommend Top-10" with `mf` selected, or running the four-method comparison),
- * with progress reported in the status line and the browser painting between
- * epochs. The load path therefore must not claim the model was trained.
+ * NOTHING MF-related is computed here. The MF model (the HW5 checkpoint from
+ * `week6/mf_checkpoint.json`) is loaded lazily, on the first need only (switching
+ * the method to `mf`, pressing "Recommend Top-10" with `mf` selected, or running
+ * the four-method comparison). The load path therefore must not claim a model is
+ * present.
  *
  * Resolves without throwing; every failure is reported in the status line.
  *
@@ -3782,8 +4153,7 @@ async function hw6Bootstrap() {
     hw6SetStatus(
       "Dataset ready: " + HW6_STATE.trainUserIds.length.toLocaleString("en-US") + " training users, " +
       HW6_STATE.candidateIds.length.toLocaleString("en-US") + " candidate movies on " + backend +
-      ". The MF reference is not trained yet (it trains on first use). Implement the TODO(hw6) functions, " +
-      "then build the graph.",
+      ". The MF model loads on first use. Press \u201cBuild graph\u201d to start.",
     );
   } catch (error) {
     console.error("Initialization failed:", error);

@@ -1,0 +1,506 @@
+{
+  "split": {
+    "train": 79619,
+    "val": 9596,
+    "test": 10785
+  },
+  "graph": {
+    "users": 943,
+    "movies": 1611,
+    "nodes": 2554,
+    "zeroDegreeUsers": 1,
+    "zeroDegreeMovies": 253,
+    "positiveEdges": 45602
+  },
+  "cohorts": {
+    "val": {
+      "size": 846,
+      "excludedUnseen": 4,
+      "excludedNoEligible": 97
+    },
+    "test": {
+      "size": 861,
+      "excludedUnseen": 13,
+      "excludedNoEligible": 82
+    }
+  },
+  "alphaSweep": [
+    {
+      "alpha": 0.5,
+      "recall": 0.11448315913208877,
+      "iterations": 21,
+      "cohortSize": 846
+    },
+    {
+      "alpha": 0.7,
+      "recall": 0.1047969507641043,
+      "iterations": 41,
+      "cohortSize": 846
+    },
+    {
+      "alpha": 0.85,
+      "recall": 0.09002077155336492,
+      "iterations": 90,
+      "cohortSize": 846
+    },
+    {
+      "alpha": 0.95,
+      "recall": 0.07375030387909676,
+      "iterations": 283,
+      "cohortSize": 846
+    }
+  ],
+  "recall": {
+    "test": {
+      "popularity": {
+        "recall": 0.07602291343770759,
+        "cohortSize": 861,
+        "iterations": null
+      },
+      "pagerank": {
+        "recall": 0.07969324149418144,
+        "cohortSize": 861,
+        "iterations": 19
+      },
+      "ppr": {
+        "recall": 0.11218853219486066,
+        "cohortSize": 861,
+        "iterations": 21
+      }
+    }
+  },
+  "top10": {
+    "user1": {
+      "userId": 1,
+      "methods": {
+        "popularity": [
+          {
+            "movieId": 100,
+            "title": "Fargo (1996)",
+            "score": 377,
+            "popularity": 377
+          },
+          {
+            "movieId": 258,
+            "title": "Contact (1997)",
+            "score": 307,
+            "popularity": 307
+          },
+          {
+            "movieId": 286,
+            "title": "English Patient, The (1996)",
+            "score": 279,
+            "popularity": 279
+          },
+          {
+            "movieId": 300,
+            "title": "Air Force One (1997)",
+            "score": 235,
+            "popularity": 235
+          },
+          {
+            "movieId": 288,
+            "title": "Scream (1996)",
+            "score": 226,
+            "popularity": 226
+          },
+          {
+            "movieId": 318,
+            "title": "Schindler's List (1993)",
+            "score": 224,
+            "popularity": 224
+          },
+          {
+            "movieId": 313,
+            "title": "Titanic (1997)",
+            "score": 219,
+            "popularity": 219
+          },
+          {
+            "movieId": 302,
+            "title": "L.A. Confidential (1997)",
+            "score": 202,
+            "popularity": 202
+          },
+          {
+            "movieId": 357,
+            "title": "One Flew Over the Cuckoo's Nest (1975)",
+            "score": 202,
+            "popularity": 202
+          },
+          {
+            "movieId": 483,
+            "title": "Casablanca (1942)",
+            "score": 197,
+            "popularity": 197
+          }
+        ],
+        "pagerank": [
+          {
+            "movieId": 258,
+            "title": "Contact (1997)",
+            "score": 0.002375186517601337,
+            "popularity": 307
+          },
+          {
+            "movieId": 286,
+            "title": "English Patient, The (1996)",
+            "score": 0.0022912525644246955,
+            "popularity": 279
+          },
+          {
+            "movieId": 100,
+            "title": "Fargo (1996)",
+            "score": 0.0022716951987442925,
+            "popularity": 377
+          },
+          {
+            "movieId": 313,
+            "title": "Titanic (1997)",
+            "score": 0.002063426554480847,
+            "popularity": 219
+          },
+          {
+            "movieId": 300,
+            "title": "Air Force One (1997)",
+            "score": 0.002003419506746231,
+            "popularity": 235
+          },
+          {
+            "movieId": 288,
+            "title": "Scream (1996)",
+            "score": 0.0018683738480013202,
+            "popularity": 226
+          },
+          {
+            "movieId": 302,
+            "title": "L.A. Confidential (1997)",
+            "score": 0.0017981338847428154,
+            "popularity": 202
+          },
+          {
+            "movieId": 294,
+            "title": "Liar Liar (1997)",
+            "score": 0.0014883466774944314,
+            "popularity": 182
+          },
+          {
+            "movieId": 275,
+            "title": "Sense and Sensibility (1995)",
+            "score": 0.0012158649228166032,
+            "popularity": 178
+          },
+          {
+            "movieId": 222,
+            "title": "Star Trek: First Contact (1996)",
+            "score": 0.0011928167199619882,
+            "popularity": 189
+          }
+        ],
+        "ppr": [
+          {
+            "movieId": 100,
+            "title": "Fargo (1996)",
+            "score": 0.000685520996303016,
+            "popularity": 377
+          },
+          {
+            "movieId": 258,
+            "title": "Contact (1997)",
+            "score": 0.00043986742397370015,
+            "popularity": 307
+          },
+          {
+            "movieId": 286,
+            "title": "English Patient, The (1996)",
+            "score": 0.00043102002374151917,
+            "popularity": 279
+          },
+          {
+            "movieId": 318,
+            "title": "Schindler's List (1993)",
+            "score": 0.0004038178854583465,
+            "popularity": 224
+          },
+          {
+            "movieId": 357,
+            "title": "One Flew Over the Cuckoo's Nest (1975)",
+            "score": 0.00037716738857826866,
+            "popularity": 202
+          },
+          {
+            "movieId": 483,
+            "title": "Casablanca (1942)",
+            "score": 0.0003596904385800965,
+            "popularity": 197
+          },
+          {
+            "movieId": 222,
+            "title": "Star Trek: First Contact (1996)",
+            "score": 0.0003327864334868738,
+            "popularity": 189
+          },
+          {
+            "movieId": 475,
+            "title": "Trainspotting (1996)",
+            "score": 0.0003280910235369727,
+            "popularity": 164
+          },
+          {
+            "movieId": 275,
+            "title": "Sense and Sensibility (1995)",
+            "score": 0.00032018583519223754,
+            "popularity": 178
+          },
+          {
+            "movieId": 423,
+            "title": "E.T. the Extra-Terrestrial (1982)",
+            "score": 0.0003056691272318072,
+            "popularity": 167
+          }
+        ]
+      }
+    },
+    "user2": {
+      "userId": 2,
+      "methods": {
+        "popularity": [
+          {
+            "movieId": 181,
+            "title": "Return of the Jedi (1983)",
+            "score": 339,
+            "popularity": 339
+          },
+          {
+            "movieId": 174,
+            "title": "Raiders of the Lost Ark (1981)",
+            "score": 312,
+            "popularity": 312
+          },
+          {
+            "movieId": 98,
+            "title": "Silence of the Lambs, The (1991)",
+            "score": 308,
+            "popularity": 308
+          },
+          {
+            "movieId": 56,
+            "title": "Pulp Fiction (1994)",
+            "score": 263,
+            "popularity": 263
+          },
+          {
+            "movieId": 172,
+            "title": "Empire Strikes Back, The (1980)",
+            "score": 261,
+            "popularity": 261
+          },
+          {
+            "movieId": 7,
+            "title": "Twelve Monkeys (1995)",
+            "score": 234,
+            "popularity": 234
+          },
+          {
+            "movieId": 79,
+            "title": "Fugitive, The (1993)",
+            "score": 230,
+            "popularity": 230
+          },
+          {
+            "movieId": 64,
+            "title": "Shawshank Redemption, The (1994)",
+            "score": 228,
+            "popularity": 228
+          },
+          {
+            "movieId": 318,
+            "title": "Schindler's List (1993)",
+            "score": 224,
+            "popularity": 224
+          },
+          {
+            "movieId": 173,
+            "title": "Princess Bride, The (1987)",
+            "score": 222,
+            "popularity": 222
+          }
+        ],
+        "pagerank": [
+          {
+            "movieId": 181,
+            "title": "Return of the Jedi (1983)",
+            "score": 0.001988940829205313,
+            "popularity": 339
+          },
+          {
+            "movieId": 174,
+            "title": "Raiders of the Lost Ark (1981)",
+            "score": 0.0015527263936934827,
+            "popularity": 312
+          },
+          {
+            "movieId": 98,
+            "title": "Silence of the Lambs, The (1991)",
+            "score": 0.0015255435847564497,
+            "popularity": 308
+          },
+          {
+            "movieId": 7,
+            "title": "Twelve Monkeys (1995)",
+            "score": 0.0013737749883653973,
+            "popularity": 234
+          },
+          {
+            "movieId": 56,
+            "title": "Pulp Fiction (1994)",
+            "score": 0.0013726182445799023,
+            "popularity": 263
+          },
+          {
+            "movieId": 172,
+            "title": "Empire Strikes Back, The (1980)",
+            "score": 0.0013182981814775238,
+            "popularity": 261
+          },
+          {
+            "movieId": 117,
+            "title": "Rock, The (1996)",
+            "score": 0.0013080038179279756,
+            "popularity": 215
+          },
+          {
+            "movieId": 121,
+            "title": "Independence Day (ID4) (1996)",
+            "score": 0.0012972894122301707,
+            "popularity": 207
+          },
+          {
+            "movieId": 268,
+            "title": "Chasing Amy (1997)",
+            "score": 0.0012656085769342969,
+            "popularity": 146
+          },
+          {
+            "movieId": 222,
+            "title": "Star Trek: First Contact (1996)",
+            "score": 0.0011928167199619882,
+            "popularity": 189
+          }
+        ],
+        "ppr": [
+          {
+            "movieId": 181,
+            "title": "Return of the Jedi (1983)",
+            "score": 0.0006973389768093159,
+            "popularity": 339
+          },
+          {
+            "movieId": 9,
+            "title": "Dead Man Walking (1995)",
+            "score": 0.0004976633308751466,
+            "popularity": 182
+          },
+          {
+            "movieId": 7,
+            "title": "Twelve Monkeys (1995)",
+            "score": 0.0004743739604389463,
+            "popularity": 234
+          },
+          {
+            "movieId": 117,
+            "title": "Rock, The (1996)",
+            "score": 0.0004563615139720568,
+            "popularity": 215
+          },
+          {
+            "movieId": 98,
+            "title": "Silence of the Lambs, The (1991)",
+            "score": 0.000446509942046909,
+            "popularity": 308
+          },
+          {
+            "movieId": 121,
+            "title": "Independence Day (ID4) (1996)",
+            "score": 0.00043071233413922847,
+            "popularity": 207
+          },
+          {
+            "movieId": 174,
+            "title": "Raiders of the Lost Ark (1981)",
+            "score": 0.0004028508826430769,
+            "popularity": 312
+          },
+          {
+            "movieId": 268,
+            "title": "Chasing Amy (1997)",
+            "score": 0.00040181097959404374,
+            "popularity": 146
+          },
+          {
+            "movieId": 475,
+            "title": "Trainspotting (1996)",
+            "score": 0.0004016051914108095,
+            "popularity": 164
+          },
+          {
+            "movieId": 15,
+            "title": "Mr. Holland's Opus (1995)",
+            "score": 0.0004009183021762101,
+            "popularity": 160
+          }
+        ]
+      }
+    }
+  },
+  "bestAlpha": 0.5,
+  "pprUser1Node085": {
+    "node": 0,
+    "iterations": 90,
+    "residual": 8.886552479546057e-7,
+    "converged": true,
+    "sum": 0.9999999999999994,
+    "topMovieNodes": [
+      {
+        "movieId": 50,
+        "score": 0.004264419338744768
+      },
+      {
+        "movieId": 181,
+        "score": 0.003469298166623876
+      },
+      {
+        "movieId": 174,
+        "score": 0.0033140010621037527
+      },
+      {
+        "movieId": 98,
+        "score": 0.003272072952664186
+      },
+      {
+        "movieId": 127,
+        "score": 0.003256278571694076
+      },
+      {
+        "movieId": 1,
+        "score": 0.003065593147530832
+      },
+      {
+        "movieId": 56,
+        "score": 0.002967562258117898
+      },
+      {
+        "movieId": 172,
+        "score": 0.0029527244761915934
+      },
+      {
+        "movieId": 100,
+        "score": 0.0027416782164216545
+      },
+      {
+        "movieId": 7,
+        "score": 0.00270956452327226
+      }
+    ]
+  }
+}

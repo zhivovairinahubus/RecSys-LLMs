@@ -1,0 +1,303 @@
+Chrome: 155.0.8059.85
+TF backend: webgl
+
+=== Dataset summary ===
+Users observed in training
+943
+Movies observed in training
+1,611
+Ratings loaded
+100,000
+Split: train / validation / test
+79,619 / 9,596 / 10,785
+Positive training interactions
+45,602
+Zero-degree users
+1
+Zero-degree movies
+253
+Matrix sparsity
+93.71%
+
+0 user(s) skipped while splitting. The split is chronological within each user, not globally time-consistent; MovieLens records rating times, not viewing sessions. An unobserved rating is missing data, not a zero.
+
+=== Memory ===
+tf.memory().numTensors before two pageRank(0.85): 0
+tf.memory().numTensors after two pageRank(0.85): 4
+
+=== Runs ===
+pageRank(0.85) #1: {"it":78,"res":9.543728083372116e-7,"conv":true}
+pageRank(0.85) #2: {"it":78,"res":9.543728083372116e-7,"conv":true}
+pageRank(0.95): {"it":243,"res":9.657596820034087e-7,"conv":true}
+personalizedPageRank(0,0.85): {"err":"personalizedPageRank: unknown user id 0 (not present in GRAPH.userIds)"}
+
+=== Self-checks (#self-checks) ===
+HW6 self-checks — pass 12, fail 0, pending 0 (of 12)
+backend: webgl
+MF model: not loaded yet (loads on first MF need)
+
+PASS  reference graph: uniform alpha=0.85 matches readme 4.1 values — C>A>B>D; produced by student pageRank(alpha, {transition: REFERENCE_GRAPH.transition}), iterations 28
+PASS  reference graph: restart at A alpha=0.85 matches readme 4.1 values — A>C>B>D (D stays 0); produced by student personalizedPageRank(seedNode, alpha, {transition: REFERENCE_GRAPH.transition})
+PASS  row normalization: every nonzero-degree row sums to 1 — 6 positive-degree row(s) sum to 1; 2 dangling row(s) are zero
+PASS  restart distributions: nonnegative and summing to 1 — uniform + one-hot over 4 nodes
+PASS  iterations preserve total probability (sum approx 1) — sum = 1.0000002682 over 3 synthetic nodes (graph.js)
+PASS  stationary scores are nonnegative — 3 scores nonnegative (graph.js)
+PASS  one extra update produces approximately the same distribution — L1 = 7.972e-7
+PASS  zero-degree node fixture preserves probability mass — danglingMask [false,true,false,false,true]; mass 1.00000022 / 1.00000000
+PASS  matrix orientation: probability collects at the pointed-to node, not the source — p = [0.486486, 0.256757, 0.256757]
+PASS  recommendTopK: excludes previously rated movies and breaks ties by ascending id — 10 eligible items for user 1
+PASS  graph mapping: node count equals observed users plus observed movies — 2554 nodes = 943 users + 1611 movies
+PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
+
+=== Alpha sweep (validation Recall@10, PPR) ===
+time_ms: 17324.0
+best_alpha: 0.5
+note: 
+alpha 0.5: recall=0.11448315913208877
+alpha 0.7: recall=0.1047969507641043
+alpha 0.85: recall=0.09002077155336492
+alpha 0.95: recall=0.07375030387909676
+
+
+=== Slider set to selected alpha ===
+{"value":0.5,"readout":"0.50"}
+
+=== Comparison (test split, 4 methods) ===
+time_ms: 4874.0
+{"method":"popularity","recall":0.07602291343770759,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":271.99686411149816,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+{"method":"pagerank","recall":0.07969324149418144,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":257.820325203252,"iterations":19,"residual":5.486072041094303e-7,"converged":true,"error":null,"note":null}
+{"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+{"method":"mf","recall":0.010302410966487053,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":26.842044134727065,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+
+
+=== recommendTopK("ppr", u, 10, "test") ===
+{
+  "user1": {
+    "userId": 1,
+    "recs": [
+      {
+        "movieId": 100,
+        "title": "Fargo (1996)",
+        "score": 0.0006855191895738244,
+        "popularity": 377
+      },
+      {
+        "movieId": 258,
+        "title": "Contact (1997)",
+        "score": 0.0004398658056743443,
+        "popularity": 307
+      },
+      {
+        "movieId": 286,
+        "title": "English Patient, The (1996)",
+        "score": 0.00043101841583848,
+        "popularity": 279
+      },
+      {
+        "movieId": 318,
+        "title": "Schindler's List (1993)",
+        "score": 0.0004038166953250766,
+        "popularity": 224
+      },
+      {
+        "movieId": 357,
+        "title": "One Flew Over the Cuckoo's Nest (1975)",
+        "score": 0.00037716623046435416,
+        "popularity": 202
+      },
+      {
+        "movieId": 483,
+        "title": "Casablanca (1942)",
+        "score": 0.00035968932206742465,
+        "popularity": 197
+      },
+      {
+        "movieId": 222,
+        "title": "Star Trek: First Contact (1996)",
+        "score": 0.00033278539194725454,
+        "popularity": 189
+      },
+      {
+        "movieId": 475,
+        "title": "Trainspotting (1996)",
+        "score": 0.00032809015829116106,
+        "popularity": 164
+      },
+      {
+        "movieId": 275,
+        "title": "Sense and Sensibility (1995)",
+        "score": 0.00032018491765484214,
+        "popularity": 178
+      },
+      {
+        "movieId": 423,
+        "title": "E.T. the Extra-Terrestrial (1982)",
+        "score": 0.00030566827626898885,
+        "popularity": 167
+      }
+    ]
+  },
+  "user2": {
+    "userId": 2,
+    "recs": [
+      {
+        "movieId": 181,
+        "title": "Return of the Jedi (1983)",
+        "score": 0.0006973391282372177,
+        "popularity": 339
+      },
+      {
+        "movieId": 9,
+        "title": "Dead Man Walking (1995)",
+        "score": 0.0004976635682396591,
+        "popularity": 182
+      },
+      {
+        "movieId": 7,
+        "title": "Twelve Monkeys (1995)",
+        "score": 0.00047437407192774117,
+        "popularity": 234
+      },
+      {
+        "movieId": 117,
+        "title": "Rock, The (1996)",
+        "score": 0.0004563616821542382,
+        "popularity": 215
+      },
+      {
+        "movieId": 98,
+        "title": "Silence of the Lambs, The (1991)",
+        "score": 0.00044651018106378615,
+        "popularity": 308
+      },
+      {
+        "movieId": 121,
+        "title": "Independence Day (ID4) (1996)",
+        "score": 0.00043071250547654927,
+        "popularity": 207
+      },
+      {
+        "movieId": 174,
+        "title": "Raiders of the Lost Ark (1981)",
+        "score": 0.00040285097202286124,
+        "popularity": 312
+      },
+      {
+        "movieId": 268,
+        "title": "Chasing Amy (1997)",
+        "score": 0.00040181103395298123,
+        "popularity": 146
+      },
+      {
+        "movieId": 475,
+        "title": "Trainspotting (1996)",
+        "score": 0.00040160532807931304,
+        "popularity": 164
+      },
+      {
+        "movieId": 15,
+        "title": "Mr. Holland's Opus (1995)",
+        "score": 0.0004009184194728732,
+        "popularity": 160
+      }
+    ]
+  }
+}
+
+=== Raw adapter PPR (hw6RunPPR(getGraph(), 1, 0.85)) ===
+{
+  "nUsers": 943,
+  "userNodeOfUser1": 0,
+  "adapterRestartNode": 0,
+  "argmaxNode": 0,
+  "argmaxIsUserNode": true,
+  "argmaxMovieId": null,
+  "argmaxScore": 0.15403765439987183,
+  "sum": 1.0000003670597835,
+  "iterations": 91,
+  "residual": 9.242157830158249e-7,
+  "converged": true,
+  "movieScoresUser1Node1": [
+    0.0030655963346362114,
+    0.0003070896491408348,
+    0.0012040663277730346,
+    0.0007401804905384779,
+    0.00020100412075407803
+  ]
+}
+
+=== Cross-check: page vs independent reference ===
+(a) Recall / selected alpha
+    page alpha sweep: 0.5=0.11448315913208877, 0.7=0.1047969507641043, 0.85=0.09002077155336492, 0.95=0.07375030387909676; best=0.5
+    ref  alpha sweep: 0.5=0.11448315913208877, 0.7=0.1047969507641043, 0.85=0.09002077155336492, 0.95=0.07375030387909676; best=0.5
+    popularity: page=0.07602291343770759 ref=0.07602291343770759 -> MATCH
+    pagerank: page=0.07969324149418144 ref=0.07969324149418144 -> MATCH
+    ppr: page=0.11218853219486066 ref=0.11218853219486066 -> MATCH
+(b) Top-10 PPR users 1 and 2 (page recommendTopK vs ref)
+    user 1: ids MATCH; max |score diff| = 1.807e-9
+    user 2: ids MATCH; max |score diff| = 2.390e-10
+(c) Raw adapter PPR hw6RunPPR(getGraph(), 1, 0.85)
+    adapter restart node = 0 (user 1's real node = 0)
+    argmax node = 0, isUserNode=true, argmaxMovieId=null, score=0.15403765439987183
+    ref PPR(user 1 node 0) iterations=90 residual=8.886552479546057e-7 sum=0.9999999999999994
+    page raw sum=1.0000003670597835 iterations=91 residual=9.242157830158249e-7
+    seeds same node? YES
+
+=== MF_INFO ===
+{
+  "factors": 16,
+  "epochs": 20,
+  "learningRate": 0.01,
+  "regularization": 0.05,
+  "batchSize": 64,
+  "seed": 2025,
+  "backend": "webgl",
+  "checkpoint": 3,
+  "validationRMSE": 1.0160939234475768,
+  "testRMSE": 1.0582837991811909,
+  "source": "week6/mf_checkpoint.json (HW5 model, best validation epoch 3)",
+  "trainedAt": "2026-10-21T01:25:05.067Z",
+  "history": []
+}
+
+=== Submission export (week6/submission/) ===
+demo users = [1,2]; Top-10 users = 1, 2; methods = ["ppr","mf","popularity","pagerank"]
+verification.json = 2336 bytes
+results.csv = 1002 bytes
+recommendations.csv = 8239 bytes
+
+=== Timings (ms) ===
+page load -> dataset/split ready: 117
+Build graph: 31.4
+Run tests: 1052.3
+alpha sweep (4 alphas): 17324.0
+MF load (hw6EnsureMfForNeed, cold): 88.0
+Evaluate comparison (MF already loaded): 4874.0
+repeat sweep: 17280.4
+repeat comparison: 4833.2
+
+=== Tensor counts (tf.memory().numTensors) ===
+after two pageRank(0.85): 4
+after Run tests: 4
+after second Run tests: 4
+after alpha sweep: 4
+after Evaluate comparison (MF loaded): 6
+after repeat sweep + repeat comparison: 6
+
+=== Convergence by alpha (pageRank and PPR user 1) ===
+pageRank alpha 0.5: iterations=19 residual=5.486072041094303e-7 converged=true
+pageRank alpha 0.7: iterations=36 residual=7.571070455014706e-7 converged=true
+pageRank alpha 0.85: iterations=78 residual=9.543728083372116e-7 converged=true
+pageRank alpha 0.95: iterations=243 residual=9.657596820034087e-7 converged=true
+ppr(user 1) alpha 0.5: iterations=22 residual=5.052477689559964e-7 converged=true
+ppr(user 1) alpha 0.7: iterations=42 residual=8.04616320237983e-7 converged=true
+ppr(user 1) alpha 0.85: iterations=91 residual=9.242157830158249e-7 converged=true
+ppr(user 1) alpha 0.95: iterations=291 residual=9.741643225424923e-7 converged=true
+
+=== tf.* API audit (source references vs loaded runtime) ===
+graph.js: 6 distinct tf.* members; missing in runtime: none
+    concat, matMul, min, tensor1d, tensor2d, tidy
+script.js: 17 distinct tf.* members; missing in runtime: none
+    Variable, clipByValue, gather, getBackend, losses, matMul, mean, mul, nextFrame, ready, setBackend, sum, tensor1d, tensor2d, tidy, train, variable
+
+=== Console/logs (last 80) ===

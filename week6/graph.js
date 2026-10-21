@@ -16,23 +16,20 @@
  * `ratingMatrix`, `genreNames`, `SPLIT_EXCLUSIONS` and `splitByTimestamp()`.
  * This file does not mutate them.
  *
- * WHAT YOU MUST IMPLEMENT (`TODO(hw6)` - each stub throws until you write it):
+ * IMPLEMENTED HERE (HW6):
  *   1. `buildGraph(train)`            - bipartite graph over training positives.
  *   2. `rowNormalize(graph)`          - row-stochastic transition Q + dangling mask.
  *   3. `pageRank(alpha, opts)`        - uniform-restart PageRank.
  *   4. `personalizedPageRank(userId, alpha, opts)` - one-hot restart at one user.
  *
- * PROVIDED for you (scaffolding): the `REFERENCE_GRAPH` constant with the two
+ * SCAFFOLDING (unchanged): the `REFERENCE_GRAPH` constant with the two
  * reference vectors and both rankings from readme.md section 4.1 (plus the
  * derived `REFERENCE_GRAPH.transition`, see below), the graph
  * accessors (`GRAPH`, `setGraph`, `getGraph`), the d3 graph view
  * (`renderGraphView`), the 4-node fixture teaching demo (`fixtureStep` /
  * `fixtureReset`), and the `#graph-summary-body` renderer.
  *
- * GRACEFUL DEGRADATION: the fixture demo and the graph view work before any
- * stub is implemented, so the page loads and renders with no console errors.
- *
- * SCOPE NOTE: d3 is used ONLY by the graph view. The propagation stubs must use
+ * SCOPE NOTE: d3 is used ONLY by the graph view. The propagation functions use
  * TensorFlow.js tensor operations on `R` and its transpose for the MovieLens
  * graph (readme.md section 3.5); the fixture demo below is the only
  * plain-JavaScript propagation loop in this file.
@@ -323,17 +320,17 @@ function getGraph() {
 }
 
 // ---------------------------------------------------------------------------
-// Student stubs (TODO(hw6))
+// Propagation core (implemented)
 //
-// Each stub throws until you implement it. Keep the signature and the return
-// shape; update the JSDoc contract notes if your design differs. The graph view
-// and the fixture demo keep working while these throw.
+// buildGraph / rowNormalize / pageRank / personalizedPageRank implement the
+// readme.md contracts. Keep the signatures and return shapes; the graph view and
+// the fixture demo consume the same graph object.
 // ---------------------------------------------------------------------------
 
 /**
  * Build the bipartite user-movie graph from the TRAINING split.
  *
- * TODO(hw6): implement this. Rules (readme.md section 3.1):
+ * Rules (readme.md section 3.1):
  *  - The node universe is the set of user ids and movie ids observed in
  *    `train` ONLY. Map ids to contiguous indices explicitly; never add a
  *    padding node (no index-0 "dummy" row).
@@ -354,31 +351,154 @@ function getGraph() {
  * @returns {Graph}
  */
 function buildGraph(train) {
-  // TODO(hw6): collect observed ids, map them to contiguous indices, fill R and
-  // degree, then return the object described in the typedef and readme 3.1.
-  throw new Error("TODO(hw6): buildGraph is not implemented yet.");
+  if (!Array.isArray(train) || train.length === 0) {
+    return {
+      nUsers: 0,
+      nMovies: 0,
+      userIds: [],
+      movieIds: [],
+      userIndexOf: new Map(),
+      movieIndexOf: new Map(),
+      nodeCount: 0,
+      nodeOfUser: function (userId) {
+        const idx = this.userIndexOf.get(userId);
+        return idx === undefined ? -1 : idx;
+      },
+      movieOfNode: function (node) {
+        if (!this.isUserNode(node)) {
+          const local = node - this.nUsers;
+          if (local >= 0 && local < this.movieIds.length) return this.movieIds[local];
+        }
+        return undefined;
+      },
+      isUserNode: function (node) {
+        return node >= 0 && node < this.nUsers;
+      },
+      degree: new Float64Array(0),
+      zeroDegreeUsers: [],
+      zeroDegreeMovies: [],
+      positiveEdges: 0,
+      R: []
+    };
+  }
+
+  const userSet = new Set();
+  const movieSet = new Set();
+  for (let i = 0; i < train.length; i++) {
+    const r = train[i];
+    if (!r) continue;
+    userSet.add(r.userId);
+    movieSet.add(r.movieId);
+  }
+
+  const userIds = Array.from(userSet).sort((a, b) => {
+    const na = Number(a), nb = Number(b);
+    if (na < nb) return -1;
+    if (na > nb) return 1;
+    return 0;
+  });
+  const movieIds = Array.from(movieSet).sort((a, b) => {
+    const na = Number(a), nb = Number(b);
+    if (na < nb) return -1;
+    if (na > nb) return 1;
+    return 0;
+  });
+
+  const userIndexOf = new Map();
+  for (let u = 0; u < userIds.length; u++) userIndexOf.set(userIds[u], u);
+  const movieIndexOf = new Map();
+  for (let m = 0; m < movieIds.length; m++) movieIndexOf.set(movieIds[m], m);
+
+  const nUsers = userIds.length;
+  const nMovies = movieIds.length;
+  const nodeCount = nUsers + nMovies;
+
+  const R = [];
+  for (let u = 0; u < nUsers; u++) {
+    R.push(new Array(nMovies).fill(0));
+  }
+
+  let positiveEdges = 0;
+  for (let i = 0; i < train.length; i++) {
+    const r = train[i];
+    if (!r) continue;
+    if (Number(r.rating) < 4.0) continue;
+    const uIdx = userIndexOf.get(r.userId);
+    const mIdx = movieIndexOf.get(r.movieId);
+    if (uIdx === undefined || mIdx === undefined) continue;
+    if (R[uIdx][mIdx] === 0) {
+      R[uIdx][mIdx] = 1;
+      positiveEdges++;
+    }
+  }
+
+  const degree = new Float64Array(nodeCount);
+  for (let u = 0; u < nUsers; u++) {
+    let d = 0;
+    const row = R[u];
+    for (let m = 0; m < nMovies; m++) if (row[m]) d++;
+    degree[u] = d;
+  }
+  for (let m = 0; m < nMovies; m++) {
+    let d = 0;
+    for (let u = 0; u < nUsers; u++) if (R[u][m]) d++;
+    degree[nUsers + m] = d;
+  }
+
+  const zeroDegreeUsers = [];
+  for (let u = 0; u < nUsers; u++) if (degree[u] === 0) zeroDegreeUsers.push(userIds[u]);
+  const zeroDegreeMovies = [];
+  for (let m = 0; m < nMovies; m++) if (degree[nUsers + m] === 0) zeroDegreeMovies.push(movieIds[m]);
+
+  return {
+    nUsers: nUsers,
+    nMovies: nMovies,
+    userIds: userIds,
+    movieIds: movieIds,
+    userIndexOf: userIndexOf,
+    movieIndexOf: movieIndexOf,
+    nodeCount: nodeCount,
+    nodeOfUser: function (userId) {
+      const idx = this.userIndexOf.get(userId);
+      return idx === undefined ? -1 : idx;
+    },
+    movieOfNode: function (node) {
+      if (!this.isUserNode(node)) {
+        const local = node - this.nUsers;
+        if (local >= 0 && local < this.movieIds.length) return this.movieIds[local];
+      }
+      return undefined;
+    },
+    isUserNode: function (node) {
+      return node >= 0 && node < this.nUsers;
+    },
+    degree: degree,
+    zeroDegreeUsers: zeroDegreeUsers,
+    zeroDegreeMovies: zeroDegreeMovies,
+    positiveEdges: positiveEdges,
+    R: R
+  };
 }
 
 /**
  * Row-normalize the transition matrix and record the zero-degree nodes.
  *
- * TODO(hw6): for each positive-degree node, divide its row by its degree so the
- * row sums to 1; leave zero-degree rows all-zero and mark them in
- * `danglingMask`. The dangling mass must be handled in the update exactly as in
+ * For each positive-degree node, divide its row by its degree so the
+ * row sums to 1; zero-degree rows are left all-zero and marked in
+ * `danglingMask`. The dangling mass is handled in the update exactly as in
  * readme.md section 3.3:
  *
  *   p_next = alpha * (Q^T * p + d * v) + (1 - alpha) * v
  *
  * where d is the probability mass currently sitting on zero-degree nodes.
  *
- * INTENDED TENSORFLOW.JS USE (readme.md section 3.5): this helper returns plain
- * JavaScript arrays so it can be inspected and tested, but the student
- * implementation should lift them into tensors for the batched propagation:
- * build the full transition from the two off-diagonal blocks (R row-normalized
+ * This helper returns plain JavaScript arrays so it can be inspected and tested;
+ * the propagation functions lift them into tensors for the batched update. The
+ * full transition is built from the two off-diagonal blocks (R row-normalized
  * by user degree and R-transpose row-normalized by movie degree) so the square
- * adjacency matrix is never materialized, and use `tf.tensor2d(Q)`,
- * `tf.transpose`, `tf.matMul`, and a `danglingMask`-derived correction for the
- * dangling term. Q and danglingMask are deliberately plain so tests can verify
+ * adjacency matrix is never materialized, using `tf.matMul` and a
+ * `danglingMask`-derived correction for the dangling term. Q and danglingMask
+ * are deliberately plain so tests can verify
  * row sums and the mask without a backend.
  *
  * Assumptions: `graph` comes from `buildGraph` (node order users then movies).
@@ -388,14 +508,60 @@ function buildGraph(train) {
  * @returns {RowNormalized}
  */
 function rowNormalize(graph) {
-  // TODO(hw6): normalize positive-degree rows and build the dangling mask.
-  throw new Error("TODO(hw6): rowNormalize is not implemented yet.");
+  if (!graph || !graph.nodeCount) {
+    return { Q: [], danglingMask: [] };
+  }
+  const n = graph.nodeCount;
+  const nUsers = graph.nUsers || 0;
+  const nMovies = graph.nMovies || 0;
+  const R = graph.R || [];
+  const degree = graph.degree || new Float64Array(n);
+
+  const Q = [];
+  for (let i = 0; i < n; i++) {
+    Q.push(new Array(n).fill(0));
+  }
+
+  const danglingMask = [];
+  for (let i = 0; i < n; i++) danglingMask.push(false);
+
+  // Users -> Movies
+  for (let u = 0; u < nUsers; u++) {
+    const d = Number(degree[u] || 0);
+    if (d <= 0) {
+      danglingMask[u] = true;
+      continue;
+    }
+    const row = R[u] || [];
+    for (let m = 0; m < nMovies; m++) {
+      if (row[m]) {
+        Q[u][nUsers + m] = 1 / d;
+      }
+    }
+  }
+
+  // Movies -> Users
+  for (let m = 0; m < nMovies; m++) {
+    const nodeIdx = nUsers + m;
+    const d = Number(degree[nodeIdx] || 0);
+    if (d <= 0) {
+      danglingMask[nodeIdx] = true;
+      continue;
+    }
+    for (let u = 0; u < nUsers; u++) {
+      if (R[u] && R[u][m]) {
+        Q[nodeIdx][u] = 1 / d;
+      }
+    }
+  }
+
+  return { Q: Q, danglingMask: danglingMask };
 }
 
 /**
  * Global PageRank with a uniform restart distribution.
  *
- * TODO(hw6): implement the power iteration with a uniform restart vector v
+ * Power iteration with a uniform restart vector v
  * (readme.md sections 3.2-3.4), using TensorFlow.js for the batched
  * propagation:
  *
@@ -406,7 +572,7 @@ function rowNormalize(graph) {
  * is NOT proof of convergence, so `converged` must be false when the cap is
  * hit. Do not force any node's score to equal the restart probability.
  *
- * TRANSITION SOURCE - part of the contract you must implement:
+ * TRANSITION SOURCE - part of the contract:
  *  - `opts.transition` present (a {@link TransitionSpec}, e.g.
  *    `REFERENCE_GRAPH.transition`): propagate on THAT matrix and do not require
  *    the global `GRAPH`. `Q` is already row-normalized, so do not re-normalize
@@ -438,45 +604,219 @@ function rowNormalize(graph) {
  * @throws {Error} when neither `opts.transition` nor the global `GRAPH` exists.
  */
 function pageRank(alpha, opts) {
-  // TODO(hw6): power iteration with a uniform restart on the tensor path.
-  throw new Error("TODO(hw6): pageRank is not implemented yet.");
+  return personalizedPageRank(null, alpha, opts);
 }
 
 /**
  * Personalized PageRank with a one-hot restart at one user's node.
  *
- * TODO(hw6): identical to `pageRank` except the restart vector v is one-hot at
- * one node. It accepts the same `opts.transition` override, the same stopping
- * rule, the same zero-degree policy and the same return shape
+ * Identical to `pageRank` except the restart vector v is one-hot at the restart
+ * node. It accepts the same `opts.transition` override, the same stopping rule,
+ * the same zero-degree policy and the same return shape
  * `{p, iterations, residual, converged}`.
  *
- * RESTART INDEX (node index, not a raw user id): the first argument is a node
- * INDEX and is used directly as the restart node. This is today's caller
- * convention; keep it.
- *  - default MovieLens path: the index is a global node index from `buildGraph`
- *    (a user node is `GRAPH.nodeOfUser(userId)` or equivalently any
- *    `index < GRAPH.nUsers`).
- *  - `opts.transition` path: the index must be in `[0, Q.length)` and refers to
- *    the same node order as `Q` (`REFERENCE_GRAPH.transition.nodeLabels` names
- *    the fixture's nodes for display).
+ * RESTART ARGUMENT - TWO CONVENTIONS, ONE PER PATH:
+ *  - default MovieLens path (`opts.transition` absent): the first argument is a
+ *    RAW USER ID (the MovieLens user id such as `1` or `943`), NOT a node index.
+ *    It is translated to a node with `GRAPH.nodeOfUser(userId)`. This is what the
+ *    real callers pass: the page adapter `hw6AdapterPPR` calls
+ *    `personalizedPageRank(rawUserId, alpha)` (script.js:1456) with the raw id,
+ *    and the page's two-user demonstration / recall path routes raw ids through
+ *    `hw6UserNodeIndex` (script.js:1539). Passing a node index here would seed
+ *    the wrong node - e.g. raw user `943` maps to node `942` while the value
+ *    `943` is the first movie node - so the raw id is the only safe convention.
+ *    A `null` / `undefined` first argument is the uniform restart (no seeding):
+ *    this is exactly `pageRank(alpha)`, which delegates here with `null`.
+ *  - `opts.transition` path: the first argument is a NODE INDEX in `[0, Q.length)`
+ *    over `Q`'s own node order, used directly. This is what the page's
+ *    `opts.transition` self-checks pass (a fixture node index), and what a
+ *    `TransitionSpec` carries (`REFERENCE_GRAPH.transition.nodeLabels` names the
+ *    fixture's nodes for display).
  *
- * FAILURE CASES: an unknown / out-of-range restart index must throw a clear
- * Error naming the index rather than silently falling back to a uniform
- * restart; and when neither `opts.transition` nor the global `GRAPH` is
- * available, throw instead of guessing.
+ * FAILURE CASES: on the MovieLens path an unknown / out-of-range raw user id must
+ * throw a clear Error naming that id (never a silent uniform restart); on the
+ * `opts.transition` path an out-of-range node index must throw naming the index;
+ * and when neither `opts.transition` nor the global `GRAPH` is available, throw
+ * instead of guessing.
  *
- * @param {number} userId Node index of the restart node (see RESTART INDEX).
+ * @param {?number} userId Raw MovieLens user id on the default path (or `null`
+ *   for a uniform restart), or a node index on the `opts.transition` path
+ *   (see RESTART ARGUMENT).
  * @param {number} alpha  Link-following probability in [0, 1]; 1 - alpha restarts.
  * @param {{tol?: number, maxIter?: number, transition?: TransitionSpec}} [opts]
  *   Same options as `pageRank`; defaults tol = 1e-6, maxIter = 500, transition
  *   absent (use the global GRAPH).
  * @returns {PageRankResult} `{p, iterations, residual, converged}` (see `pageRank`).
- * @throws {Error} when the restart index is unknown / out of range, or when
- *   neither `opts.transition` nor the global `GRAPH` exists.
+ * @throws {Error} when the restart user id / node index is unknown or out of
+ *   range, or when neither `opts.transition` nor the global `GRAPH` exists.
  */
 function personalizedPageRank(userId, alpha, opts) {
-  // TODO(hw6): one-hot restart at the user's node; fail loudly on unknown users.
-  throw new Error("TODO(hw6): personalizedPageRank is not implemented yet.");
+  const options = opts || {};
+  let restartNode;
+  if (options.transition) {
+    // Node-index convention: the caller supplies a position in Q's own order.
+    restartNode = userId;
+  } else if (userId === null || userId === undefined) {
+    // Uniform restart: this is exactly `pageRank(alpha)`, which delegates here.
+    // A null restart is not a user lookup, so it stays the uniform distribution.
+    restartNode = null;
+  } else {
+    // MovieLens convention: the caller supplies a raw user id; translate it.
+    const graph = (typeof getGraph === "function") ? getGraph() : (typeof GRAPH !== "undefined" ? GRAPH : null);
+    if (!graph) {
+      throw new Error("personalizedPageRank: no active GRAPH and no opts.transition");
+    }
+    const node = (typeof graph.nodeOfUser === "function") ? Number(graph.nodeOfUser(userId)) : NaN;
+    if (!Number.isFinite(node) || node < 0) {
+      throw new Error("personalizedPageRank: unknown user id " + userId + " (not present in GRAPH.userIds)");
+    }
+    restartNode = node;
+  }
+  const batch = personalizedPageRankBatch([restartNode], alpha, options);
+  const p = batch.vectors[0];
+  const pOut = new Float64Array(p.length);
+  for (let i = 0; i < p.length; i++) pOut[i] = p[i];
+  return { p: pOut, iterations: batch.iterations[0], residual: batch.residual[0], converged: batch.converged[0] };
+}
+
+/**
+ * Batched Personalized PageRank over NODE-INDEX restart seeds.
+ *
+ * The restart argument `restartIndices` is ALWAYS a list of global NODE INDICES
+ * (not raw user ids): users `[0, nUsers)`, then movies `[nUsers, nUsers+nMovies)`
+ * on the MovieLens path, or `Q`'s own order on the `opts.transition` path. Each
+ * returned vector is one column of the final distribution `[n x B]`; the caller
+ * that holds raw user ids is responsible for mapping them (see
+ * `personalizedPageRank`, which does the raw-id -> node translation).
+ *
+ * @param {number[]} restartIndices Node indices, one per restart column.
+ * @param {number} alpha
+ * @param {{tol?: number, maxIter?: number, transition?: TransitionSpec}} [opts]
+ * @returns {{vectors:Float64Array[], iterations:number[], residual:number[],
+ *   converged:boolean[]}} One entry per restart index.
+ * @throws {Error} when an index is out of range or no transition is available.
+ */
+function personalizedPageRankBatch(restartIndices, alpha, opts) {
+  opts = opts || {};
+  const tol = opts.tol === undefined ? 1e-6 : opts.tol;
+  const maxIter = opts.maxIter === undefined ? 500 : opts.maxIter;
+  const a = Number(alpha);
+  if (typeof tf === 'undefined') throw new Error("TensorFlow.js not available");
+  if (!Array.isArray(restartIndices)) restartIndices = [restartIndices];
+
+  let n = 0;
+  let isTransition = false;
+  let QMatArr = null;
+  let danglingMaskArr = null;
+  let graph = null;
+
+  if (opts.transition) {
+    QMatArr = opts.transition.Q;
+    danglingMaskArr = opts.transition.danglingMask || [];
+    n = QMatArr ? QMatArr.length : 0;
+    isTransition = true;
+  } else {
+    graph = (typeof getGraph === 'function') ? getGraph() : (typeof GRAPH !== 'undefined' ? GRAPH : null);
+    if (!graph) throw new Error("personalizedPageRank requires either opts.transition or an active GRAPH");
+    n = graph.nodeCount || 0;
+    isTransition = false;
+  }
+  if (!n) throw new Error("personalizedPageRank: invalid transition");
+
+  if (!isTransition) {
+    graphPprEnsureCache(graph);
+  }
+
+  const B = restartIndices.length;
+  for (let b = 0; b < B; b++) {
+    const rid = restartIndices[b];
+    if (rid === null || rid === undefined) continue;
+    const seed = Number(rid);
+    if (!Number.isFinite(seed) || seed < 0 || seed >= n) {
+      throw new Error("personalizedPageRank: unknown or out of range restart index " + rid);
+    }
+  }
+
+  // v and P as flat Float32Array, row-major [n x B]
+  const vFlat = new Float32Array(n * B);
+  for (let b = 0; b < B; b++) {
+    const rid = restartIndices[b];
+    if (rid === null || rid === undefined) {
+      const uni = 1 / n;
+      for (let i = 0; i < n; i++) vFlat[i * B + b] = uni;
+    } else {
+      const seed = Number(rid);
+      vFlat[seed * B + b] = 1;
+    }
+  }
+  const pFlat = Float32Array.from(vFlat);
+
+  const iterations = new Int32Array(B).fill(0);
+  const residualArr = new Float64Array(B).fill(Infinity);
+  const convergedArr = new Array(B).fill(false);
+  const frozen = new Array(B).fill(false);
+  let totalFrozen = 0;
+
+  while (totalFrozen < B) {
+    const maxIterCur = Math.max.apply(null, Array.from(iterations));
+    if (maxIterCur >= maxIter) break;
+
+    let pNextData = null;
+    const pNext = tf.tidy(() => {
+      const PMat = tf.tensor2d(pFlat, [n, B]);
+      const vMat = tf.tensor2d(vFlat, [n, B]);
+      let out;
+      if (isTransition) {
+        out = graphPprStepBatchTransition(QMatArr, a, PMat, vMat, danglingMaskArr);
+      } else {
+        out = graphPprStepBatchMovieLens(graph, a, PMat, vMat);
+      }
+      return out;
+    });
+    pNextData = pNext.dataSync();
+    pNext.dispose();
+
+    for (let b = 0; b < B; b++) {
+      if (frozen[b]) continue;
+      let l1 = 0;
+      for (let i = 0; i < n; i++) {
+        const idx = i * B + b;
+        const oldv = pFlat[idx];
+        const newv = pNextData[idx];
+        l1 += Math.abs(newv - oldv);
+        pFlat[idx] = newv;
+      }
+      iterations[b]++;
+      residualArr[b] = l1;
+      if (l1 < tol) {
+        convergedArr[b] = true;
+        frozen[b] = true;
+        totalFrozen++;
+      } else if (iterations[b] >= maxIter) {
+        convergedArr[b] = false;
+        frozen[b] = true;
+        totalFrozen++;
+      }
+    }
+  }
+
+  for (let b = 0; b < B; b++) {
+    if (!frozen[b] && iterations[b] >= maxIter) {
+      frozen[b] = true;
+      if (convergedArr[b] !== true) convergedArr[b] = false;
+    }
+  }
+
+  const vectors = [];
+  for (let b = 0; b < B; b++) {
+    const vcol = new Float64Array(n);
+    for (let i = 0; i < n; i++) vcol[i] = pFlat[i * B + b];
+    vectors.push(vcol);
+  }
+  const itArr = Array.from(iterations);
+  const resArr = Array.from(residualArr);
+  const convArr = Array.from(convergedArr);
+  return { vectors: vectors, iterations: itArr, residual: resArr, converged: convArr };
 }
 
 // ---------------------------------------------------------------------------
@@ -730,7 +1070,7 @@ function graphBuildEgoView(seedUserId, getScore) {
       edges: [],
       omitted: 0,
       nodeCount: 0,
-      note: "No graph yet - build the graph (TODO(hw6) buildGraph) to draw the ego subgraph."
+      note: "No graph yet - build the graph to draw the ego subgraph."
     };
   }
 
@@ -1348,8 +1688,8 @@ function graphRenderSummary(graph) {
  * modifies GRAPH or any score array.
  *
  * Degrades gracefully: with no d3, no graph, or no seed user it writes a plain
- * message instead of throwing, and an unimplemented `buildGraph` stub simply
- * leaves GRAPH null (the fixture demo still draws).
+ * message instead of throwing; with GRAPH still null (graph not yet built) the
+ * fixture demo still draws.
  *
  * @param {GraphViewOptions} [opts]
  * @returns {(Object|null)} a small description of the last render, or null.
@@ -1423,10 +1763,10 @@ function renderGraphView(opts) {
 // Fixture teaching demo (public: fixtureStep / fixtureReset)
 //
 // THIS DEMO EXISTS ONLY FOR THE 4-NODE FIXTURE. It is a tiny plain-JavaScript
-// propagation so the animation works before you write any stub, and it is NOT a
-// template for the MovieLens implementation. The MovieLens propagation must use
-// TensorFlow.js tensor operations on R and R-transpose (readme.md section 3.5),
-// as required by pageRank / personalizedPageRank.
+// propagation so the animation is self-contained, and it is NOT a template for
+// the MovieLens implementation. The MovieLens propagation uses TensorFlow.js
+// tensor operations on R and R-transpose (readme.md section 3.5), as required by
+// pageRank / personalizedPageRank.
 // ---------------------------------------------------------------------------
 
 /**
@@ -1520,4 +1860,99 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", graphInitGraphView);
 } else {
   graphInitGraphView();
+}
+
+// ---------------------------------------------------------------------------
+// Efficient propagation
+// ---------------------------------------------------------------------------
+
+const GRAPH_PPR_CACHE = {
+  RTensor: null,
+  invDegU: null,
+  invDegM: null,
+  danglingMaskTensor: null,
+  nUsers: 0,
+  nMovies: 0,
+  n: 0,
+  forGraph: null
+};
+
+function graphPprDisposeCache() {
+  try {
+    if (GRAPH_PPR_CACHE.RTensor) { GRAPH_PPR_CACHE.RTensor.dispose(); GRAPH_PPR_CACHE.RTensor = null; }
+    if (GRAPH_PPR_CACHE.invDegU) { GRAPH_PPR_CACHE.invDegU.dispose(); GRAPH_PPR_CACHE.invDegU = null; }
+    if (GRAPH_PPR_CACHE.invDegM) { GRAPH_PPR_CACHE.invDegM.dispose(); GRAPH_PPR_CACHE.invDegM = null; }
+    if (GRAPH_PPR_CACHE.danglingMaskTensor) { GRAPH_PPR_CACHE.danglingMaskTensor.dispose(); GRAPH_PPR_CACHE.danglingMaskTensor = null; }
+  } catch (e) {}
+  GRAPH_PPR_CACHE.nUsers = 0; GRAPH_PPR_CACHE.nMovies = 0; GRAPH_PPR_CACHE.n = 0; GRAPH_PPR_CACHE.forGraph = null;
+}
+
+function graphPprEnsureCache(graph) {
+  if (typeof tf === 'undefined') return null;
+  if (GRAPH_PPR_CACHE.forGraph === graph && GRAPH_PPR_CACHE.RTensor) return GRAPH_PPR_CACHE;
+  graphPprDisposeCache();
+  if (!graph || !graph.nUsers || !graph.nMovies || !graph.R) return null;
+  const nUsers = graph.nUsers, nMovies = graph.nMovies, n = nUsers + nMovies;
+  const R = graph.R;
+  const RData = new Float32Array(nUsers * nMovies);
+  for (let u = 0; u < nUsers; u++) {
+    const row = R[u] || [];
+    for (let m = 0; m < nMovies; m++) RData[u * nMovies + m] = row[m] ? 1.0 : 0.0;
+  }
+  const RTensor = tf.tensor2d(RData, [nUsers, nMovies]);
+  const invDegUData = new Float32Array(nUsers);
+  const invDegMData = new Float32Array(nMovies);
+  for (let u = 0; u < nUsers; u++) {
+    const d = Number(graph.degree[u] || 0);
+    invDegUData[u] = d > 0 ? 1.0 / d : 0.0;
+  }
+  for (let m = 0; m < nMovies; m++) {
+    const d = Number(graph.degree[nUsers + m] || 0);
+    invDegMData[m] = d > 0 ? 1.0 / d : 0.0;
+  }
+  // Build the column vectors as 2-D tensors directly: `tensor1d(...).reshape(...)`
+  // would leave the intermediate 1-D tensor alive (this runs outside tf.tidy).
+  const invDegU = tf.tensor2d(invDegUData, [nUsers, 1]);
+  const invDegM = tf.tensor2d(invDegMData, [nMovies, 1]);
+  const danglingMaskData = new Float32Array(n);
+  for (let i = 0; i < n; i++) danglingMaskData[i] = Number(graph.degree[i] || 0) === 0 ? 1.0 : 0.0;
+  const danglingMaskTensor = tf.tensor2d(danglingMaskData, [n, 1]);
+  GRAPH_PPR_CACHE.RTensor = RTensor; GRAPH_PPR_CACHE.invDegU = invDegU; GRAPH_PPR_CACHE.invDegM = invDegM;
+  GRAPH_PPR_CACHE.danglingMaskTensor = danglingMaskTensor;
+  GRAPH_PPR_CACHE.nUsers = nUsers; GRAPH_PPR_CACHE.nMovies = nMovies; GRAPH_PPR_CACHE.n = n; GRAPH_PPR_CACHE.forGraph = graph;
+  return GRAPH_PPR_CACHE;
+}
+
+function graphPprStepBatchMovieLens(graph, alpha, PMat, vMat) {
+  const cache = graphPprEnsureCache(graph);
+  const n = cache.n, nUsers = cache.nUsers, nMovies = cache.nMovies;
+  const B = PMat.shape[1];
+  return tf.tidy(() => {
+    const Pusers = PMat.slice([0, 0], [nUsers, B]);
+    const Pmovies = PMat.slice([nUsers, 0], [nMovies, B]);
+    const msgU2M = tf.matMul(GRAPH_PPR_CACHE.RTensor.transpose(), Pusers.mul(GRAPH_PPR_CACHE.invDegU));
+    const msgM2U = tf.matMul(GRAPH_PPR_CACHE.RTensor, Pmovies.mul(GRAPH_PPR_CACHE.invDegM));
+    const qp = tf.concat([msgM2U, msgU2M], 0);
+    const d = PMat.mul(GRAPH_PPR_CACHE.danglingMaskTensor).sum(0).reshape([1, B]);
+    return qp.add(vMat.mul(d)).mul(alpha).add(vMat.mul(1 - alpha));
+  });
+}
+
+function graphPprStepBatchTransition(QMatArr, alpha, PMat, vMat, danglingMaskArr) {
+  const n = QMatArr.length;
+  const B = PMat.shape[1];
+  return tf.tidy(() => {
+    const QtData = new Float32Array(n * n);
+    for (let j = 0; j < n; j++) {
+      for (let i = 0; i < n; i++) QtData[j * n + i] = QMatArr[i][j];
+    }
+    const Qt = tf.tensor2d(QtData, [n, n]);
+    const qp = tf.matMul(Qt, PMat);
+    const danglingData = new Float32Array(n);
+    for (let i = 0; i < n; i++) danglingData[i] = (danglingMaskArr[i]) ? 1.0 : 0.0;
+    const dangling = tf.tensor1d(danglingData).reshape([n, 1]);
+    const d = PMat.mul(dangling).sum(0).reshape([1, B]);
+    const res = qp.add(vMat.mul(d)).mul(alpha).add(vMat.mul(1 - alpha));
+    return res;
+  });
 }
