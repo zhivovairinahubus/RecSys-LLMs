@@ -50,7 +50,7 @@ PASS  graph mapping: node count equals observed users plus observed movies — 2
 PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
 
 === Alpha sweep (validation Recall@10, PPR) ===
-time_ms: 17324.0
+time_ms: 17339.3
 best_alpha: 0.5
 note: 
 alpha 0.5: recall=0.11448315913208877
@@ -63,7 +63,7 @@ alpha 0.95: recall=0.07375030387909676
 {"value":0.5,"readout":"0.50"}
 
 === Comparison (test split, 4 methods) ===
-time_ms: 4874.0
+time_ms: 4899.7
 {"method":"popularity","recall":0.07602291343770759,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":271.99686411149816,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
 {"method":"pagerank","recall":0.07969324149418144,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":257.820325203252,"iterations":19,"residual":5.486072041094303e-7,"converged":true,"error":null,"note":null}
 {"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
@@ -256,7 +256,7 @@ time_ms: 4874.0
   "validationRMSE": 1.0160939234475768,
   "testRMSE": 1.0582837991811909,
   "source": "week6/mf_checkpoint.json (HW5 model, best validation epoch 3)",
-  "trainedAt": "2026-10-21T01:25:05.067Z",
+  "trainedAt": "2026-10-21T01:33:05.921Z",
   "history": []
 }
 
@@ -266,15 +266,28 @@ verification.json = 2336 bytes
 results.csv = 1002 bytes
 recommendations.csv = 8239 bytes
 
+=== u.item encoding (data.js Response.text() = UTF-8) ===
+movies: 1682; titles with U+FFFD: 9; titles with any non-ASCII char: 9
+  id 543: Mis�rables, Les (1995)
+  id 1005: Double vie de V�ronique, La (Double Life of Veronique, The) (1991)
+  id 1104: C'est arriv� pr�s de chez vous (1992)
+  id 1233: N�nette et Boni (1996)
+  id 1252: Contempt (M�pris, Le) (1963)
+  id 1322: Metisse (Caf� au Lait) (1993)
+  id 1366: JLG/JLG - autoportrait de d�cembre (1994)
+  id 1623: C�r�monie, La (1995)
+  id 1633: � k�ldum klaka (Cold Fever) (1994)
+corrupted titles present in recommendations.csv: 0 (of 100 rows)
+
 === Timings (ms) ===
-page load -> dataset/split ready: 117
-Build graph: 31.4
-Run tests: 1052.3
-alpha sweep (4 alphas): 17324.0
-MF load (hw6EnsureMfForNeed, cold): 88.0
-Evaluate comparison (MF already loaded): 4874.0
-repeat sweep: 17280.4
-repeat comparison: 4833.2
+page load -> dataset/split ready: 118
+Build graph: 29.4
+Run tests: 1000.0
+alpha sweep (4 alphas): 17339.3
+MF load (hw6EnsureMfForNeed, cold): 84.6
+Evaluate comparison (MF already loaded): 4899.7
+repeat sweep: 17224.3
+repeat comparison: 4809.8
 
 === Tensor counts (tf.memory().numTensors) ===
 after two pageRank(0.85): 4

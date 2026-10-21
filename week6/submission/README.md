@@ -100,11 +100,33 @@ the submitted numbers.
   true observed matrix is 943 users × 1682 movies → 93.6953%. This is
   scaffolding display text, not part of the graded TODO(hw6) surface, so it is
   left untouched and reported here.
-- **`u.item` is read as latin1 (week6/data.js), not UTF-8.** Nine titles carry
-  accented characters (e.g. `Misérables, Les (1995)`, `Double vie de Véronique…`,
-  `C'est arrivé près de chez vous (1992)`). Reading the file as UTF-8 would
-  replace each accented byte with `U+FFFD` and corrupt those 9 titles; latin1 is
-  the correct choice for this file and is left as-is.
+- **`u.item` is decoded as UTF-8 (week6/data.js), which corrupts 9 titles.** The
+  file is latin1-encoded, but `data.js:47` reads it with `await
+  moviesResponse.text()`, and the Fetch standard always decodes `Response.text()`
+  as UTF-8 regardless of any `charset` in the HTTP header (GitHub Pages serves
+  `u.item` as `application/octet-stream` anyway, so no charset is honoured). Each
+  accented byte therefore decodes to `U+FFFD` (`\uFFFD`). Measured in the page
+  (`probe.js`, `movies.filter(m => m.title.includes("\uFFFD"))`): **9 of 1682**
+  titles are corrupted, and they are the only titles carrying non-ASCII chars:
+
+  | movie id | title as decoded in the page |
+  | --- | --- |
+  | 543 | `Misérables, Les (1995)` → `Mis\uFFFDrables, Les (1995)` |
+  | 1005 | `Double vie de Véronique, La …` → `Double vie de V\uFFFDronique, La …` |
+  | 1104 | `C'est arrivé près de chez vous (1992)` → `C'est arriv\uFFFD pr\uFFFDs …` |
+  | 1233 | `Nénette et Boni (1996)` → `N\uFFFDnette et Boni (1996)` |
+  | 1252 | `Contempt (Mépris, Le) (1963)` → `Contempt (M\uFFFDpris, Le) (1963)` |
+  | 1322 | `Metisse (Café au Lait) (1993)` → `Metisse (Caf\uFFFD au Lait) (1993)` |
+  | 1366 | `JLG/JLG - autoportrait de décembre (1994)` → `… d\uFFFDcembre (1994)` |
+  | 1623 | `Cérémonie, La (1995)` → `C\uFFFDr\uFFFDmonie, La (1995)` |
+  | 1633 | `Á káldum klaka (Cold Fever) (1994)` → `\uFFFD k\uFFFDldum klaka …` |
+
+  `data.js` is untouched scaffolding, so the page's titles stay corrupted there.
+  This does **not** affect the graph, rankings or metrics (ids and ratings are
+  ASCII), and none of these 9 movies appears in the submitted
+  `recommendations.csv` for users 1 and 2 (verified: 0 of 100 rows). Only the
+  display titles of those 9 rows would differ; the underlying IDs, scores and
+  popularity match the independent reference.
 - **Self-check #10 inspects popularity only.** It verifies candidate-pool /
   exclusion invariants through the popularity ranking and does not exercise the
   graph-based rankings for that particular invariant; the graph rankings are

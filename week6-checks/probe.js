@@ -154,6 +154,42 @@ async function main() {
   const tfBackend = await page.evaluate(() => (typeof tf !== "undefined" ? tf.getBackend() : "undefined"));
   const datasetSummary = await page.evaluate(() => document.getElementById("dataset-summary-body")?.innerText || "");
 
+  // u.item encoding check: data.js uses `Response.text()`, which the Fetch spec
+  // always decodes as UTF-8 regardless of any charset header. Accented latin1
+  // bytes therefore become U+FFFD. Count and list the corrupted titles.
+  const encodingCheck = await page.evaluate(() => {
+    try {
+      const broken = movies
+        .filter((m) => typeof m.title === "string" && m.title.includes("\uFFFD"))
+        .map((m) => ({ id: m.id, title: m.title }));
+      const total = movies.length;
+      // Titles that look correct would have no replacement char; also record how
+      // many carry any non-ASCII character at all (expected: only the broken ones).
+      const nonAscii = movies.filter((m) => typeof m.title === "string" && /[^\x00-\x7F]/.test(m.title)).length;
+      return { total: total, corrupted: broken.length, nonAscii: nonAscii, list: broken };
+    } catch (e) {
+      return { err: e.message };
+    }
+  });
+
+  // Do the corrupted titles appear in the submitted Top-10 for users 1 and 2?
+  const corruptedInSubmission = (() => {
+    try {
+      const ids = new Set((encodingCheck.list || []).map((b) => b.id));
+      const csv = fs.readFileSync(path.join(WEEK6, "submission", "recommendations.csv"), "utf8");
+      const rows = csv.trim().split("\n").slice(1);
+      const hits = [];
+      for (const row of rows) {
+        const cells = row.split(",");
+        const movieId = Number(cells[4]);
+        if (ids.has(movieId)) hits.push({ movieId: movieId, title: cells[5] });
+      }
+      return { hits: hits, count: hits.length, movieCount: rows.length };
+    } catch (e) {
+      return { err: e.message };
+    }
+  })();
+
   // Build graph first
   let buildGraphMs = null;
   try {
@@ -618,6 +654,14 @@ async function main() {
       `verification.json = ${submission.verification.length} bytes\n` +
       `results.csv = ${submission.results.length} bytes\n` +
       `recommendations.csv = ${submission.recommendations.length} bytes`,
+    "",
+    "=== u.item encoding (data.js Response.text() = UTF-8) ===",
+    encodingCheck.err ? `error: ${encodingCheck.err}` :
+      `movies: ${encodingCheck.total}; titles with U+FFFD: ${encodingCheck.corrupted}; titles with any non-ASCII char: ${encodingCheck.nonAscii}\n` +
+      (encodingCheck.list || []).map((b) => `  id ${b.id}: ${b.title}`).join("\n"),
+    corruptedInSubmission.err ? `submission check error: ${corruptedInSubmission.err}` :
+      `corrupted titles present in recommendations.csv: ${corruptedInSubmission.count} (of ${corruptedInSubmission.movieCount} rows)` +
+      (corruptedInSubmission.hits.length ? "\n" + corruptedInSubmission.hits.map((h) => `  movieId ${h.movieId}: ${h.title}`).join("\n") : ""),
     "",
     "=== Timings (ms) ===",
     `page load -> dataset/split ready: ${pageLoadToReadyMs === null ? "-" : pageLoadToReadyMs}`,
