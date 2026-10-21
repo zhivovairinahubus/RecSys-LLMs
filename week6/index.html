@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW6 — Graph-Based Recommendations with Personalized PageRank</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <noscript>
+    <p class="load-error">JavaScript required — please enable scripts for this directory and reload.</p>
+  </noscript>
+
+  <header class="site-header">
+    <h1>Graph-Based Recommendations with Personalized PageRank</h1>
+    <p class="subtitle">HW6 assignment: build a user–movie bipartite graph, propagate personalized PageRank with TensorFlow.js, and compare popularity, global PageRank, PPR and matrix factorization on a shared evaluation cohort.</p>
+    <p class="note">The graph is built from positive training interactions only; an unobserved rating is missing data, not a zero.</p>
+  </header>
+
+  <main>
+    <p id="status" class="status" role="status" aria-live="polite">Loading…</p>
+
+    <section aria-labelledby="tf-status-heading" class="panel">
+      <h2 id="tf-status-heading">TensorFlow.js status</h2>
+      <p id="tf-status" class="status-line" role="status" aria-live="polite">Loading TensorFlow.js…</p>
+      <p id="backend-note" class="hint" role="status" aria-live="polite">No backend reported yet. Backend and runtime are recorded, not compared across devices.</p>
+    </section>
+
+    <section aria-labelledby="dataset-summary-heading" class="panel">
+      <h2 id="dataset-summary-heading">Dataset summary</h2>
+      <div id="dataset-summary-body" role="status" aria-live="polite">
+        <p class="empty-state">Loading dataset…</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="graph-summary-heading" class="panel">
+      <h2 id="graph-summary-heading">Graph summary</h2>
+      <div id="graph-summary-body" role="status" aria-live="polite">
+        <p class="empty-state">No graph yet. Press “Build graph” to report nodes, edges, zero-degree users, zero-degree movies and positive training interactions.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="controls-heading" class="panel">
+      <h2 id="controls-heading">Controls</h2>
+
+      <div class="control-grid control-grid--two">
+        <div class="control">
+          <label for="alpha">Personalization alpha (link-following probability)</label>
+          <div class="alpha-row">
+            <input type="range" id="alpha" name="alpha" min="0.50" max="0.95" step="0.05" value="0.85">
+            <output id="alpha-value" class="alpha-value" for="alpha">0.85</output>
+          </div>
+          <p class="hint">1 - alpha is the restart probability. Validation sweeps 0.50, 0.70, 0.85 and 0.95.</p>
+        </div>
+
+        <div class="control">
+          <label for="method">Method</label>
+          <select id="method" name="method">
+            <option value="popularity">popularity</option>
+            <option value="pagerank">pagerank</option>
+            <option value="ppr">ppr</option>
+            <option value="mf">mf</option>
+          </select>
+          <p class="hint">Popularity counts distinct users with a positive training rating; pagerank uses a uniform restart; ppr restarts at the target user; mf reuses the previous matrix-factorization model.</p>
+        </div>
+
+        <div class="control">
+          <label for="user-select">Target user (recommendations)</label>
+          <select id="user-select" name="user-select">
+            <option value="">Loading users…</option>
+          </select>
+          <p class="hint">Drawn from the common evaluation cohort.</p>
+        </div>
+
+        <div class="control">
+          <label for="seed-user-select">Restart seed user (PPR comparison)</label>
+          <select id="seed-user-select" name="seed-user-select">
+            <option value="">Loading users…</option>
+          </select>
+          <p class="hint">Second cohort user for the “change seed only” comparison, with alpha held fixed.</p>
+        </div>
+
+        <div class="control">
+          <label for="max-nodes">Max nodes in graph view</label>
+          <input type="number" id="max-nodes" name="max-nodes" value="120" min="10" step="1" inputmode="numeric">
+          <p class="hint">Upper bound on nodes drawn in the ego subgraph.</p>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button type="button" id="build-graph">Build graph</button>
+        <button type="button" id="run-pagerank" class="secondary">Run PageRank</button>
+        <button type="button" id="run-ppr" class="secondary">Run PPR</button>
+        <button type="button" id="recommend-btn" class="secondary">Recommend Top-10</button>
+        <button type="button" id="recall-btn" class="secondary">Evaluate Recall@10 — all four methods</button>
+        <div class="button-pair">
+          <button type="button" id="alpha-sweep-btn" class="secondary">Run alpha sweep (validation)</button>
+          <button type="button" id="two-user-demo-btn" class="secondary">Run two-user demo (alpha / seed)</button>
+        </div>
+        <button type="button" id="run-tests" class="secondary">Run tests</button>
+      </div>
+
+      <p class="hint">Controls stay enabled only when the step they depend on is available; a disabled control is reported in the status line.</p>
+    </section>
+
+    <section aria-labelledby="graph-view-heading" class="panel">
+      <h2 id="graph-view-heading">Graph view</h2>
+
+      <div id="graph-controls" class="graph-controls" role="group" aria-label="Graph view mode controls">
+        <p class="empty-state">View-mode controls appear here once the graph is built.</p>
+      </div>
+
+      <svg id="graph-view" class="graph-view" role="img" aria-label="Empty graph canvas. The fixture step view teaches propagation one iteration at a time on a small node fixture; the data view colours the ego subgraph by the selected method's scores."></svg>
+
+      <div id="graph-legend" class="graph-legend">
+        <p class="empty-state">Legend appears after the first render.</p>
+      </div>
+
+      <div class="button-row">
+        <button type="button" id="step-btn" class="secondary">Step one iteration</button>
+        <button type="button" id="reset-steps" class="secondary">Reset</button>
+      </div>
+
+      <p class="caption">The fixture step view teaches propagation one iteration at a time on a small node fixture; the data view colours the ego subgraph by the selected method's scores.</p>
+    </section>
+
+    <section aria-labelledby="convergence-heading" class="panel">
+      <h2 id="convergence-heading">Convergence</h2>
+      <div id="convergence-results" role="status" aria-live="polite">
+        <p class="empty-state">Run PageRank or PPR to record the iteration count, the final residual and whether convergence was reached (cap 500 iterations, tolerance 1e-6).</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="alpha-sweep-heading" class="panel">
+      <h2 id="alpha-sweep-heading">Alpha sweep</h2>
+      <div id="alpha-sweep-results" role="status" aria-live="polite">
+        <p class="empty-state">Validation Recall@10 for alpha in {0.50, 0.70, 0.85, 0.95} is reported here; exact ties are broken by the smaller alpha.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="comparison-heading" class="panel">
+      <h2 id="comparison-heading">Method comparison</h2>
+      <div id="comparison-results" role="status" aria-live="polite">
+        <p class="empty-state">Recall@10 for the shared cohort across popularity, global PageRank, PPR and MF is compared here.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="two-user-demo-heading" class="panel">
+      <h2 id="two-user-demo-heading">Two-user one-factor demonstration</h2>
+      <div id="two-user-demo-results" role="status" aria-live="polite" aria-labelledby="two-user-demo-heading">
+        <p class="empty-state">No demonstration yet. Press “Run two-user demo (alpha / seed)” to compare the three readme §6.2 settings.</p>
+      </div>
+      <p class="caption">Shows the readme §6.2 settings: baseline user A at alpha = 0.85; seed changed to user B at alpha = 0.85; alpha changed to 0.50 for user A.</p>
+    </section>
+
+    <section aria-labelledby="recommendations-heading" class="panel">
+      <h2 id="recommendations-heading">Recommendations</h2>
+      <div id="recommendations" role="status" aria-live="polite">
+        <p class="empty-state">No recommendations yet. Build the graph, then press “Recommend Top-10”.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="recall-heading" class="panel">
+      <h2 id="recall-heading">Retrieval evaluation</h2>
+      <div id="recall-results" role="status" aria-live="polite">
+        <p class="empty-state">Recall@10 for the common evaluation cohort, plus the reported exclusions, appears here.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="self-checks-heading" class="panel">
+      <h2 id="self-checks-heading">Self-checks</h2>
+      <p class="hint">Checks that are not implemented yet are reported as PENDING (<code>TODO(hw6)</code>); they are not counted as passing.</p>
+      <pre id="self-checks" class="test-log" tabindex="0" aria-label="Self-check log">Press “Run tests” to execute the self-checks.</pre>
+    </section>
+
+    <section aria-labelledby="exports-heading" class="panel">
+      <h2 id="exports-heading">Exports</h2>
+      <div class="button-row">
+        <button type="button" id="export-verification" class="secondary">Export verification</button>
+        <button type="button" id="export-results" class="secondary">Export results</button>
+        <button type="button" id="export-recommendations" class="secondary">Export recommendations</button>
+      </div>
+      <p class="caption">Downloads: <code class="filename">verification.json</code> (machine-readable test results), <code class="filename">results.csv</code> (retrieval metrics, common-cohort size, exclusions, selected settings) and <code class="filename">recommendations.csv</code> (user ID, method, alpha, rank, movie ID, title, genres, score, training popularity).</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>LLM4Rec — Recommender Systems course, HSE University. Instructor: Seungmin Jin (sedzhin@hse.ru).</p>
+    <p>The full assignment specification is in <code>readme.md</code> in this directory.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="vendor/d3.min.js"></script>
+  <script src="data.js"></script>
+  <script src="graph.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
