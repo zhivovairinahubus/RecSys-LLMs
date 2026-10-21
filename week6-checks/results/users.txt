@@ -22,12 +22,19 @@ ppr vs popularity = 6.3926
 ppr vs mf         = 0.1928
 ppr vs pagerank   = 5.6121
 mf  vs popularity = 0.1905
+pagerank vs popularity = 6.9315
 
 === MF with a train-rating floor on candidate movies ===
 floor    Recall@10   conversion   catalog   meanPop   tail<5
 >=5      0.016873     9.8%      768     40.61     0.0%
 >=20     0.025231    15.0%      618     68.87     0.0%
 >=50     0.035130    19.3%      435     98.29     0.0%
+
+=== Union conversion coverage: ppr Top-10 OR MF(>=20 ratings) Top-10 ===
+cohort users evaluated = 861
+ppr Top-10 converted              = 340 (39.5%)
+MF(>=20) Top-10 converted          = 129 (15.0%)
+union (ppr OR MF>=20) converted   = 389 (45.2%)
 
 === User card: user 1 ===
 train ratings = 217; of them >= 4 = 131

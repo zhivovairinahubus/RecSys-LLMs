@@ -138,28 +138,36 @@ the submitted numbers.
   exclusion invariants through the popularity ranking and does not exercise the
   graph-based rankings for that particular invariant; the graph rankings are
   covered by the other checks and by the independent cross-check. Left as-is.
-- **Evaluate / alpha-sweep ordering.** Originally Evaluate read α from the
-  slider while the sweep left the slider untouched, so a grader who pressed only
+
+Three scaffolding behaviours were **corrected** because they produced wrong
+numbers (or wrong control flow) rather than merely awkward UI:
+
+- **Fallback MF collapsed to the global mean.** The provided in-browser trainer
+  added `reg · (‖P‖² + ‖Q‖²)` summed over the **entire** user and item factor
+  matrices to each batch's MSE. That term dominates the MSE gradient by orders of
+  magnitude, so Adam pulled every factor toward zero and the model degenerated to
+  predicting the train mean: validation RMSE stayed at 1.182995 for all 30
+  epochs. `hw6TrainMf` now applies the HW5-style penalty over the **batch rows
+  only** (`reg · mean_k(‖P_k‖² + ‖Q_k‖²)`), which trains normally and reaches
+  validation RMSE ≈ 0.982 at epoch 3. The page still loads MF from the HW5
+  checkpoint for the submitted numbers; the fallback runs only if that fetch
+  fails.
+- **PPR restart convention was backwards.** The page adapter `hw6AdapterPPR`
+  already passed the **raw** MovieLens user id to `personalizedPageRank` (it was
+  never changed); the mismatch was in `graph.js`: `personalizedPageRank`'s first
+  argument was documented (and initially treated) as a **node index** on the
+  MovieLens path. That seeded the wrong node — raw user `943` maps to node `942`,
+  and the literal value `943` is the first movie node. Fixed in `graph.js`: the
+  MovieLens path now translates the raw `userId` through `GRAPH.nodeOfUser`
+  (a `null` first argument stays the uniform restart that `pageRank` delegates
+  with), while the `opts.transition` path keeps taking a node index. The adapter
+  in `script.js` is unchanged.
+- **Evaluate / alpha-sweep ordering.** Originally Evaluate read α from the slider
+  while the sweep left the slider untouched, so a grader who pressed only
   Evaluate evaluated at the slider default α = 0.85 (PPR ≈ 0.100) instead of the
   validation-selected α = 0.50 (PPR = 0.112189) required by readme 6.1. Fixed:
   Evaluate now runs the validation sweep first, applies the selected α to the
   slider, then evaluates test; the sweep button also sets the slider.
-
-Two further scaffolding behaviours were **corrected** because they produced wrong
-numbers rather than merely awkward UI:
-
-- **Fallback MF collapsed to the global mean.** The starter's in-browser training
-  penalty was applied to a single summed gradient instead of averaged over the
-  batch rows, so the model under-fit and validation RMSE stayed at ~1.1830
-  (predicting the mean) for every epoch. `hw6TrainMf` now applies the HW5
-  batch-row L2 penalty; the fallback reaches validation RMSE ≈ 0.982 (epoch 3).
-  This path is not used for the submitted numbers (the HW5 checkpoint is).
-- **Adapter node shift.** The adapter used to pass a node index to
-  `personalizedPageRank` where the MovieLens convention expects a raw user id,
-  shifting the restart by one node. The adapter now calls
-  `personalizedPageRank(rawUserId, alpha)` first (and lets `graph.js` translate via
-  `GRAPH.nodeOfUser`), falling back to the node-index form only for non-MovieLens
-  graphs.
 
 No self-check is failing and no run reported nonconvergence at the selected
 settings.

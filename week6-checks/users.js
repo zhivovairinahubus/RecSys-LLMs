@@ -519,18 +519,56 @@ function main() {
   out.push(`ppr vs mf         = ${pairOverlap(results.ppr, results.mf).toFixed(4)}`);
   out.push(`ppr vs pagerank   = ${pairOverlap(results.ppr, results.pagerank).toFixed(4)}`);
   out.push(`mf  vs popularity = ${pairOverlap(results.mf, results.popularity).toFixed(4)}`);
+  out.push(`pagerank vs popularity = ${pairOverlap(results.pagerank, results.popularity).toFixed(4)}`);
   out.push("");
 
   // ---- 3. MF with a train-rating floor ------------------------------------
   out.push("=== MF with a train-rating floor on candidate movies ===");
   out.push("floor    Recall@10   conversion   catalog   meanPop   tail<5");
+  let mf20 = null;
   for (const floor of [5, 20, 50]) {
     const make = (userId) => mfMapWithFloor(model, idx, userId, trainCountByMovie, floor);
     const r = evaluateCohort(make, idx, testCohort, "test", K, trainCountByMovie);
+    if (floor === 20) mf20 = r;
     out.push(
       `>=${String(floor).padEnd(6)} ${r.recall.toFixed(6)}   ${(r.conversion * 100).toFixed(1).padStart(5)}%   ` +
       `${String(r.catalog.size).padStart(6)}   ${r.meanPopularity.toFixed(2).padStart(7)}   ${(r.tailShare * 100).toFixed(1).padStart(5)}%`,
     );
+  }
+  out.push("");
+
+  // ---- 3b. Union conversion coverage: ppr Top-10 OR MF(>=20) Top-10 --------
+  // How many cohort users have at least one test 4-5 movie in EITHER list.
+  out.push("=== Union conversion coverage: ppr Top-10 OR MF(>=20 ratings) Top-10 ===");
+  {
+    const grades = idx.gradesBySplit.test;
+    let unionConverted = 0;
+    let pprConverted = 0;
+    let mf20Converted = 0;
+    let evaluated = 0;
+    for (const userId of testCohort) {
+      const gradeMap = grades.get(userId);
+      const excluded = exclusionSet(idx, "test", userId);
+      const relevantSet = new Set();
+      if (gradeMap) for (const [movieId, rating] of gradeMap) {
+        if (rating >= POSITIVE && idx.candidateSet.has(movieId) && !excluded.has(movieId)) relevantSet.add(movieId);
+      }
+      if (relevantSet.size === 0) continue;
+      evaluated++;
+      const pprList = results.ppr.perUser.get(userId) || [];
+      const mfList = (mf20 && mf20.perUser.get(userId)) || [];
+      let hitPpr = false;
+      for (const m of pprList) if (relevantSet.has(m)) { hitPpr = true; break; }
+      let hitMf = false;
+      for (const m of mfList) if (relevantSet.has(m)) { hitMf = true; break; }
+      if (hitPpr) pprConverted++;
+      if (hitMf) mf20Converted++;
+      if (hitPpr || hitMf) unionConverted++;
+    }
+    out.push(`cohort users evaluated = ${evaluated}`);
+    out.push(`ppr Top-10 converted              = ${pprConverted} (${((pprConverted / (evaluated || 1)) * 100).toFixed(1)}%)`);
+    out.push(`MF(>=20) Top-10 converted          = ${mf20Converted} (${((mf20Converted / (evaluated || 1)) * 100).toFixed(1)}%)`);
+    out.push(`union (ppr OR MF>=20) converted   = ${unionConverted} (${((unionConverted / (evaluated || 1)) * 100).toFixed(1)}%)`);
   }
   out.push("");
 
