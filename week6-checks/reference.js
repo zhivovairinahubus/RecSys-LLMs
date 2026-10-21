@@ -477,6 +477,96 @@ function main() {
     test: { size: testCohort.length, ...testEx },
   };
 
+  // ---- Train mean, mean-prediction RMSE, unseen movies, relevance counts ----
+  out.push("");
+  out.push("=== Train mean and mean-prediction RMSE ===");
+  let trainSum = 0;
+  for (const r of split.train) trainSum += r.rating;
+  const trainMean = split.train.length > 0 ? trainSum / split.train.length : 0;
+  const rmseMean = (rows) => {
+    let s = 0;
+    for (const r of rows) {
+      const d = r.rating - trainMean;
+      s += d * d;
+    }
+    return rows.length > 0 ? Math.sqrt(s / rows.length) : 0;
+  };
+  const valRmseMean = rmseMean(split.val);
+  const testRmseMean = rmseMean(split.test);
+  out.push(`train mean rating mu = ${trainSum}/${split.train.length} = ${trainMean} (fraction)`);
+  out.push(`train mean rating mu (10 dp) = ${trainMean.toFixed(10)}`);
+  out.push(`RMSE predicting mu on val  = ${valRmseMean.toFixed(6)}`);
+  out.push(`RMSE predicting mu on test = ${testRmseMean.toFixed(6)}`);
+  json.trainMean = { mu: trainMean, count: split.train.length, rmseVal: valRmseMean, rmseTest: testRmseMean };
+
+  out.push("");
+  out.push("=== Movies in u.item with no train rating ===");
+  const trainRatedMovies = new Set();
+  for (const r of split.train) trainRatedMovies.add(r.movieId);
+  let unseenMovies = 0;
+  for (const movieId of movies.keys()) if (!trainRatedMovies.has(movieId)) unseenMovies++;
+  out.push(`u.item movies = ${movies.size}; with no train rating = ${unseenMovies}; with >= 1 train rating (candidate pool) = ${idx.candidateIds.length}`);
+  json.unseenMovies = { total: movies.size, noTrainRating: unseenMovies, candidatePool: idx.candidateIds.length };
+
+  out.push("");
+  out.push("=== Relevance in the TEST cohort (rating >= 4, in pool, not rated train/val) ===");
+  let relevantPairs = 0;
+  let relevantOutsidePool = 0;
+  for (const userId of testCohort) {
+    const gradeMap = idx.gradesBySplit.test.get(userId);
+    if (!gradeMap) continue;
+    const excluded = exclusionSet(idx, "test", userId);
+    for (const [movieId, rating] of gradeMap) {
+      if (rating < POSITIVE) continue;
+      if (!idx.candidateSet.has(movieId)) { relevantOutsidePool++; continue; }
+      if (excluded.has(movieId)) continue;
+      relevantPairs++;
+    }
+  }
+  out.push(`relevant pairs in the test cohort = ${relevantPairs}`);
+  out.push(`relevant test ratings outside the pool = ${relevantOutsidePool}`);
+  json.relevance = { testCohortPairs: relevantPairs, testOutsidePool: relevantOutsidePool };
+
+  // ---- PPR @ 0.50 over the whole test cohort: Top-10 quality signals --------
+  out.push("");
+  out.push("=== PPR @ alpha=0.50, whole test cohort Top-10 quality ===");
+  {
+    const pprCache = new Map();
+    let minTopScore = Infinity;
+    let listsWithZeroFill = 0;
+    let usersFewerThan10 = 0;
+    let evaluated = 0;
+    for (const userId of testCohort) {
+      const excluded = exclusionSet(idx, "test", userId);
+      let eligible = 0;
+      for (const movieId of idx.candidateIds) {
+        if (excluded.has(movieId)) continue;
+        eligible++;
+      }
+      if (eligible < K) usersFewerThan10++;
+      const r = scoresForMethod("ppr", idx, graph, 0.50, userId);
+      pprCache.set(userId, r.map);
+      const recs = recommendTopK(r.map, idx, userId, "test", K);
+      evaluated++;
+      let hasZero = false;
+      for (const rec of recs) {
+        if (rec.score < minTopScore) minTopScore = rec.score;
+        if (!(rec.score > 0)) hasZero = true;
+      }
+      if (hasZero) listsWithZeroFill++;
+    }
+    out.push(`cohort users evaluated = ${evaluated}`);
+    out.push(`minimum Top-10 PPR score = ${minTopScore.toExponential(6)} (${minTopScore.toFixed(10)})`);
+    out.push(`lists that included a zero-score movie = ${listsWithZeroFill}`);
+    out.push(`users with fewer than ${K} eligible candidates = ${usersFewerThan10}`);
+    json.ppr050 = {
+      cohortUsers: evaluated,
+      minTop10Score: minTopScore,
+      listsWithZeroFill: listsWithZeroFill,
+      usersFewerThanK: usersFewerThan10,
+    };
+  }
+
   // Alpha sweep on validation (PPR), iteration counts per alpha
   out.push("");
   out.push("=== Alpha sweep (validation Recall@10, PPR) ===");

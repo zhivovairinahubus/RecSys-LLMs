@@ -453,6 +453,27 @@
       }
     }
   },
+  "trainMean": {
+    "mu": 3.5806026199776437,
+    "count": 79619,
+    "rmseVal": 1.1829947710600353,
+    "rmseTest": 1.2289001371836759
+  },
+  "unseenMovies": {
+    "total": 1682,
+    "noTrainRating": 71,
+    "candidatePool": 1611
+  },
+  "relevance": {
+    "testCohortPairs": 5142,
+    "testOutsidePool": 12
+  },
+  "ppr050": {
+    "cohortUsers": 861,
+    "minTop10Score": 0.00018077398017903243,
+    "listsWithZeroFill": 0,
+    "usersFewerThanK": 0
+  },
   "bestAlpha": 0.5,
   "pprUser1Node085": {
     "node": 0,

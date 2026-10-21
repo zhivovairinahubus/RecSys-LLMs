@@ -4,6 +4,25 @@ zero-degree users / movies = 1 / 253; positive edges = 45602
 cohort val = 846 (excludedUnseen 4, excludedNoEligible 97)
 cohort test = 861 (excludedUnseen 13, excludedNoEligible 82)
 
+=== Train mean and mean-prediction RMSE ===
+train mean rating mu = 285084/79619 = 3.5806026199776437 (fraction)
+train mean rating mu (10 dp) = 3.5806026200
+RMSE predicting mu on val  = 1.182995
+RMSE predicting mu on test = 1.228900
+
+=== Movies in u.item with no train rating ===
+u.item movies = 1682; with no train rating = 71; with >= 1 train rating (candidate pool) = 1611
+
+=== Relevance in the TEST cohort (rating >= 4, in pool, not rated train/val) ===
+relevant pairs in the test cohort = 5142
+relevant test ratings outside the pool = 12
+
+=== PPR @ alpha=0.50, whole test cohort Top-10 quality ===
+cohort users evaluated = 861
+minimum Top-10 PPR score = 1.807740e-4 (0.0001807740)
+lists that included a zero-score movie = 0
+users with fewer than 10 eligible candidates = 0
+
 === Alpha sweep (validation Recall@10, PPR) ===
 alpha 0.50: recall=0.1144831591 iterations=21 cohort=846
 alpha 0.70: recall=0.1047969508 iterations=41 cohort=846
