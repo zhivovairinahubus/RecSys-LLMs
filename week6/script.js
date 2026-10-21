@@ -3932,9 +3932,14 @@ function hw6HandleRunPPR() {
 }
 
 /**
- * Run the whole retrieval evaluation: four-method comparison, validation alpha
- * sweep and the recall detail for the selected method. Every panel degrades to
- * a readable state if a `TODO(hw6)` path is reached.
+ * Run the whole retrieval evaluation in the readme order: select alpha on
+ * validation (section 6.1), apply it to the slider, then evaluate test (section
+ * 7), then show the recall detail for the selected method. Every panel degrades
+ * to a readable state if a `TODO(hw6)` path is reached.
+ *
+ * Alpha selection comes first on purpose: the comparison reads alpha from the
+ * slider, and readme 6.1 requires the final evaluation to use the alpha chosen
+ * on validation, not the slider default.
  *
  * The two-user demonstration is NOT part of this run: it has its own control
  * (`#two-user-demo-btn`) and its own output container (`#two-user-demo-results`).
@@ -3942,10 +3947,18 @@ function hw6HandleRunPPR() {
  * @returns {Promise<void>}
  */
 async function hw6HandleRecall() {
-  const alpha = hw6ReadAlpha();
   const method = hw6ReadMethod();
-  const graph = hw6ActiveGraph();
 
+  // 1) Select alpha on validation and apply it before any test evaluation.
+  const sweep = hw6RunAlphaSweep();
+  hw6RenderAlphaSweep(sweep);
+  if (sweep.best !== null && sweep.best !== undefined) {
+    hw6SetAlpha(sweep.best);
+  }
+  const alpha = hw6ReadAlpha();
+
+  // 2) Convergence evidence at the alpha actually used.
+  const graph = hw6ActiveGraph();
   if (graph) {
     try {
       hw6RunAndRecordConvergence("pagerank", graph, alpha);
@@ -3962,13 +3975,12 @@ async function hw6HandleRecall() {
     }
   }
 
+  // 3) Test evaluation with the validation-selected alpha on the slider.
   const comparison = await hw6RunComparison("test");
   hw6RenderConvergence();
   hw6RenderComparison(comparison);
 
-  const sweep = hw6RunAlphaSweep();
-  hw6RenderAlphaSweep(sweep);
-
+  // 4) Recall detail for the selected method.
   const target = document.getElementById("recall-results");
   if (target) {
     try {
@@ -3980,15 +3992,17 @@ async function hw6HandleRecall() {
     }
   }
 
-  const selected = sweep.best === null ? "not selected (validation sweep unavailable)" : "alpha " + hw6Fmt(sweep.best, 2);
-  hw6SetStatus("Evaluation run complete \u2014 selected " + selected + ".");
+  const selected = sweep.best === null || sweep.best === undefined
+    ? "not selected (validation sweep unavailable)"
+    : "alpha " + hw6Fmt(sweep.best, 2);
+  hw6SetStatus("Evaluation run complete \u2014 selected " + selected + " on validation, applied to the slider, then evaluated on test.");
 }
 
 /**
- * Run the validation-only PPR alpha sweep (readme section 6.1) and render it
- * into `#alpha-sweep-results`, reporting the selected alpha (exact ties toward
- * the smaller alpha). Degrades to a readable explanation if a `TODO(hw6)` path
- * throws.
+ * Run the validation-only PPR alpha sweep (readme section 6.1), apply the
+ * selected alpha to the slider, and render the sweep into `#alpha-sweep-results`,
+ * reporting the selected alpha (exact ties toward the smaller alpha). Degrades to
+ * a readable explanation if a `TODO(hw6)` path throws.
  *
  * @returns {void}
  */
@@ -4003,7 +4017,12 @@ function hw6HandleAlphaSweep() {
     return;
   }
   hw6RenderAlphaSweep(sweep);
-  const selected = sweep.best === null ? "not selected (validation sweep unavailable)" : "alpha " + hw6Fmt(sweep.best, 2);
+  if (sweep.best !== null && sweep.best !== undefined) {
+    hw6SetAlpha(sweep.best);
+  }
+  const selected = sweep.best === null || sweep.best === undefined
+    ? "not selected (validation sweep unavailable)"
+    : "alpha " + hw6Fmt(sweep.best, 2) + " (set on the slider)";
   hw6SetStatus("Alpha sweep (validation Recall@10) complete \u2014 selected " + selected + ".");
 }
 

@@ -50,7 +50,7 @@ PASS  graph mapping: node count equals observed users plus observed movies — 2
 PASS  public surface: every required name is defined — 10 functions + ALPHA_GRID + MF_INFO
 
 === Alpha sweep (validation Recall@10, PPR) ===
-time_ms: 17339.3
+time_ms: 22822.7
 best_alpha: 0.5
 note: 
 alpha 0.5: recall=0.11448315913208877
@@ -63,10 +63,10 @@ alpha 0.95: recall=0.07375030387909676
 {"value":0.5,"readout":"0.50"}
 
 === Comparison (test split, 4 methods) ===
-time_ms: 4899.7
+time_ms: 22822.7
 {"method":"popularity","recall":0.07602291343770759,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":271.99686411149816,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
 {"method":"pagerank","recall":0.07969324149418144,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":257.820325203252,"iterations":19,"residual":5.486072041094303e-7,"converged":true,"error":null,"note":null}
-{"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+{"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":21,"residual":9.78284361963233e-7,"converged":true,"error":null,"note":null}
 {"method":"mf","recall":0.010302410966487053,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":26.842044134727065,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
 
 
@@ -256,14 +256,14 @@ time_ms: 4899.7
   "validationRMSE": 1.0160939234475768,
   "testRMSE": 1.0582837991811909,
   "source": "week6/mf_checkpoint.json (HW5 model, best validation epoch 3)",
-  "trainedAt": "2026-10-21T01:33:05.921Z",
+  "trainedAt": "2026-10-21T07:21:58.221Z",
   "history": []
 }
 
 === Submission export (week6/submission/) ===
 demo users = [1,2]; Top-10 users = 1, 2; methods = ["ppr","mf","popularity","pagerank"]
 verification.json = 2336 bytes
-results.csv = 1002 bytes
+results.csv = 1027 bytes
 recommendations.csv = 8239 bytes
 
 === u.item encoding (data.js Response.text() = UTF-8) ===
@@ -279,23 +279,32 @@ movies: 1682; titles with U+FFFD: 9; titles with any non-ASCII char: 9
   id 1633: � k�ldum klaka (Cold Fever) (1994)
 corrupted titles present in recommendations.csv: 0 (of 100 rows)
 
+=== PRIMARY FLOW: only "Evaluate Recall@10" clicked after Build graph ===
+selected alpha on slider: 0.5 (readout 0.50)
+validation sweep (inside Evaluate): 0.5=0.11448315913208877, 0.7=0.1047969507641043, 0.85=0.09002077155336492, 0.95=0.07375030387909676
+status: Evaluation run complete — selected alpha 0.50 on validation, applied to the slider, then evaluated on test.
+test comparison rows:
+  {"method":"popularity","recall":0.07602291343770759,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":271.99686411149816,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+  {"method":"pagerank","recall":0.07969324149418144,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":257.820325203252,"iterations":19,"residual":5.486072041094303e-7,"converged":true,"error":null,"note":null}
+  {"method":"ppr","recall":0.11218853219486066,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":244.20673635307733,"iterations":21,"residual":9.78284361963233e-7,"converged":true,"error":null,"note":null}
+  {"method":"mf","recall":0.010302410966487053,"cohortSize":861,"excludedUnseen":13,"excludedNoEligible":82,"meanPopularity":26.842044134727065,"iterations":null,"residual":null,"converged":null,"error":null,"note":null}
+
 === Timings (ms) ===
-page load -> dataset/split ready: 118
-Build graph: 29.4
-Run tests: 1000.0
-alpha sweep (4 alphas): 17339.3
-MF load (hw6EnsureMfForNeed, cold): 84.6
-Evaluate comparison (MF already loaded): 4899.7
-repeat sweep: 17224.3
-repeat comparison: 4809.8
+page load -> dataset/split ready: 123
+Build graph: 30.6
+Run tests: 985.6
+Evaluate click (sweep -> slider -> test -> recall): 22822.7
+repeat Evaluate click: 17548.2
 
 === Tensor counts (tf.memory().numTensors) ===
 after two pageRank(0.85): 4
 after Run tests: 4
 after second Run tests: 4
-after alpha sweep: 4
-after Evaluate comparison (MF loaded): 6
-after repeat sweep + repeat comparison: 6
+after Evaluate click (MF loaded): 6
+after repeat Evaluate click: 6
+
+=== MF model after Evaluate ===
+{"checkpoint":3,"factors":16,"source":"week6/mf_checkpoint.json (HW5 model, best validation epoch 3)","validationRMSE":1.0160939234475768}
 
 === Convergence by alpha (pageRank and PPR user 1) ===
 pageRank alpha 0.5: iterations=19 residual=5.486072041094303e-7 converged=true

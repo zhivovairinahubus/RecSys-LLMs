@@ -12,7 +12,11 @@ pagerank    0.079693    31.1%       74    257.82     0.0%   8610
 ppr         0.112189    39.5%      138    244.21     0.0%   8610
 mf          0.010302     6.2%      824     26.84    30.2%   8610
 
-=== Mean number of common movies in ONE user's Top-10, between methods ===
+=== Popularity by train rating COUNT (HW5 style, secondary evidence) ===
+popularity_by_count 0.084490    32.9%       77   meanTrainRatings=260.78   8610 slots
+  user 1 (id 1): hits in Top-10 = 3 / 19 relevant
+  user 2 (id 2): hits in Top-10 = 0 / 2 relevant
+
 (averaged over the 861 cohort users)
 ppr vs popularity = 6.3926
 ppr vs mf         = 0.1928

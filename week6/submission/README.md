@@ -31,14 +31,21 @@ Press the buttons in this exact order (the order matters):
 1. **Build graph** — builds the bipartite graph (the data is loaded and split
    chronologically during page load, before this button).
 2. **Run tests** — the 12 self-checks (all PASS).
-3. **Run alpha sweep (validation)** — PPR Recall@10 over α ∈ {0.50, 0.70, 0.85, 0.95}; best is **0.50**.
-4. **Set the α slider to 0.50.**
-5. **Evaluate Recall@10 — all four methods** — the test-split comparison.
-   *Evaluate reads α from the slider, so step 4 must come first; the sweep in step
-   3 only picks the value, it does not apply it.*
-6. **Run two-user demo (alpha / seed)** — the one-factor demonstration.
-7. **Recommend Top-10** with each method (ppr, mf, popularity, pagerank) for the two users.
-8. **Export verification / results / recommendations** to regenerate the three files here.
+3. **Evaluate Recall@10 — all four methods** — this single button now runs the
+   whole readme 6.1 → 7 flow in the right order: it first runs the validation
+   alpha sweep (PPR Recall@10 over α ∈ {0.50, 0.70, 0.85, 0.95}), then **applies
+   the selected α = 0.50 to the slider itself**, then evaluates the four methods
+   on test at that α, then shows the recall detail. The status line names the
+   chosen α. No manual slider step is needed.
+4. *(optional)* **Run alpha sweep (validation)** — re-runs the same validation
+   sweep; it also sets the selected α on the slider.
+5. **Run two-user demo (alpha / seed)** — the one-factor demonstration.
+6. **Recommend Top-10** with each method (ppr, mf, popularity, pagerank) for the two users.
+7. **Export verification / results / recommendations** to regenerate the three files here.
+
+Verified end-to-end by clicking **only Evaluate** right after Build graph (no
+manual slider, no sweep button): selected α = 0.50, PPR Recall@10 on test =
+0.112189 (not the slider-default 0.85 result of ≈0.100).
 
 ## Versions actually used
 
@@ -131,13 +138,14 @@ the submitted numbers.
   exclusion invariants through the popularity ranking and does not exercise the
   graph-based rankings for that particular invariant; the graph rankings are
   covered by the other checks and by the independent cross-check. Left as-is.
-- **Evaluate / alpha-sweep ordering.** The alpha sweep reports the best α for
-  validation but does not write it to the slider; Evaluate reads the slider. The
-  UI therefore requires step 4 (set the slider) before step 5 (Evaluate). This is
-  an ordering constraint of the provided controls, documented above rather than
-  changed.
+- **Evaluate / alpha-sweep ordering.** Originally Evaluate read α from the
+  slider while the sweep left the slider untouched, so a grader who pressed only
+  Evaluate evaluated at the slider default α = 0.85 (PPR ≈ 0.100) instead of the
+  validation-selected α = 0.50 (PPR = 0.112189) required by readme 6.1. Fixed:
+  Evaluate now runs the validation sweep first, applies the selected α to the
+  slider, then evaluates test; the sweep button also sets the slider.
 
-Two scaffolding behaviours were **corrected** because they produced wrong
+Two further scaffolding behaviours were **corrected** because they produced wrong
 numbers rather than merely awkward UI:
 
 - **Fallback MF collapsed to the global mean.** The starter's in-browser training
@@ -174,6 +182,14 @@ node probe.js       # headless page probe + cross-check -> results/probe_final.t
 numbers can be compared against a genuine independent implementation on the same
 split and graph.
 
+`users.js` reports, besides the readme 7.3 popularity (distinct users with a
+train rating ≥ 4, which is what the page's `popularity` method uses), a second
+**secondary** popularity by train **rating count** (any rating, as in HW5): on
+the same 861-user test cohort it gives Recall@10 0.084490, conversion coverage
+32.9%, catalog coverage 77, mean train-rating count 260.78, and Top-10 hits for
+the two displayed users of 3/19 (user 1) and 0/2 (user 2). It is evidence only;
+the page's `popularity` method is unchanged.
+
 ### Cross-check summary (page vs independent reference)
 
 - Recall@10 on test — popularity 0.076023, pagerank 0.079693, ppr 0.112189: all MATCH.
@@ -182,16 +198,20 @@ split and graph.
 
 ### `probe.js` measurements (defence notes)
 
-Recorded with Chrome 155.0.8059.85, TF.js 4.22.0, backend `webgl`.
+Recorded with Chrome 155.0.8059.85, TF.js 4.22.0, backend `webgl`. The primary
+run clicks **only Evaluate** after Build graph (no manual slider, no sweep
+button): selected α = 0.50, and the four test recalls are popularity 0.076023,
+pagerank 0.079693, ppr 0.112189, mf 0.010302.
 
-Timings (ms): page load → dataset/split ready 117; Build graph 31; Run tests
-1052; alpha sweep (4 alphas) 17324; MF load cold 88; Evaluate comparison 4874.
+Timings (ms): page load → dataset/split ready 123; Build graph 31; Run tests 986;
+Evaluate click (validation sweep → set slider → test comparison → recall detail)
+22823; repeat Evaluate click 17548.
 
 Tensor count (`tf.memory().numTensors`): 4 after the two `pageRank(0.85)` calls, 4
-after Run tests, 4 after a *second* Run tests, 4 after the alpha sweep, 6 after
-Evaluate (MF loaded: 4 graph-cache + 2 MF variables), 6 after a repeated sweep +
-comparison. Nothing grows on repetition; the MF variables are created inside
-`tf.tidy` so the initial-value tensors are released.
+after Run tests, 4 after a *second* Run tests, 6 after the Evaluate click (MF
+loaded: 4 graph-cache + 2 MF variables), 6 after a repeated Evaluate click.
+Nothing grows on repetition; the MF variables are created inside `tf.tidy` so the
+initial-value tensors are released.
 
 Convergence (page `pageRank` / PPR user 1), all `converged=true`:
 

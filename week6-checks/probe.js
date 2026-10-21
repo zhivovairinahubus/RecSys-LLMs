@@ -325,63 +325,38 @@ async function main() {
     tfAudit = { err: e.message };
   }
 
-  // Alpha sweep (validation, timed). This drives recallAtK("ppr", ..., "val"),
-  // which primes the whole-cohort PPR batch.
-  const sweep = await page.evaluate(() => {
-    const t0 = performance.now();
-    try {
-      const r = hw6RunAlphaSweep();
-      const ms = performance.now() - t0;
-      return {
-        ms: ms,
-        best: r.best,
-        note: r.note,
-        rows: r.rows.map((row) => ({ alpha: row.alpha, recall: row.recall, error: row.error })),
-      };
-    } catch (e) {
-      return { err: e.message, ms: performance.now() - t0 };
-    }
-  });
 
-  // Set the slider to the selected alpha.
-  const sliderSet = await page.evaluate((best) => {
-    try {
-      hw6SetAlpha(best);
+  // PRIMARY path (item 3): after Build graph, the ONLY evaluation action is a
+  // click on "Evaluate Recall@10 — all four methods" (#recall-btn). No manual
+  // slider move and no alpha-sweep button. The handler must select alpha on
+  // validation, apply it to the slider, then evaluate test at that alpha.
+  let evaluateClick = null;
+  try {
+    evaluateClick = await page.evaluate(async () => {
+      const t0 = performance.now();
+      const btn = document.getElementById("recall-btn");
+      if (!btn) return { err: "#recall-btn not found" };
+      btn.click();
+      // Wait for the two async panels the handler fills: the comparison table
+      // and the recall detail. Watch HW6_STATE for the recorded rows.
+      const deadline = t0 + 600000;
+      while (performance.now() < deadline) {
+        const rows = (typeof HW6_STATE !== "undefined" && HW6_STATE.comparisonRows) || null;
+        if (rows && rows.length >= 4) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      const ms = performance.now() - t0;
       const slider = document.getElementById("alpha");
-      return { value: slider ? Number(slider.value) : null, readout: document.getElementById("alpha-value")?.textContent };
-    } catch (e) {
-      return { err: e.message };
-    }
-  }, sweep.best === null || sweep.best === undefined ? 0.85 : sweep.best);
-
-  const memAfterSweep = await page.evaluate(() => {
-    if (typeof tf !== 'undefined' && tf.memory) return tf.memory().numTensors;
-    return null;
-  });
-
-  // Four-method comparison on the test split (timed). MF loads lazily here, so
-  // measure the MF setup itself first, then the comparison without the load.
-  const mfLoad = await page.evaluate(async () => {
-    if (typeof HW6_MF_MODEL !== "undefined" && HW6_MF_MODEL && MF_INFO.trainedAt !== null) {
-      return { ms: 0, note: "already loaded", source: MF_INFO.source };
-    }
-    const t0 = performance.now();
-    try {
-      await hw6EnsureMfForNeed();
-      return { ms: performance.now() - t0, checkpoint: MF_INFO.checkpoint, source: MF_INFO.source };
-    } catch (e) {
-      return { err: e.message, ms: performance.now() - t0 };
-    }
-  });
-
-  const comparison = await page.evaluate(async () => {
-    const t0 = performance.now();
-    try {
-      const rows = await hw6RunComparison("test");
-      const ms = performance.now() - t0;
+      const comparisonRows = (typeof HW6_STATE !== "undefined" && HW6_STATE.comparisonRows) || [];
+      const sweepRows = (typeof HW6_STATE !== "undefined" && HW6_STATE.alphaSweepRows) || [];
+      const status = document.getElementById("status") ? document.getElementById("status").innerText : "";
       return {
         ms: ms,
-        rows: rows.map((row) => ({
+        sliderValue: slider ? Number(slider.value) : null,
+        sliderReadout: document.getElementById("alpha-value") ? document.getElementById("alpha-value").textContent : null,
+        status: status,
+        sweep: sweepRows.map((row) => ({ alpha: row.alpha, recall: row.recall, error: row.error })),
+        rows: comparisonRows.map((row) => ({
           method: row.method,
           recall: row.recall,
           cohortSize: row.cohortSize,
@@ -395,31 +370,68 @@ async function main() {
           note: row.note,
         })),
       };
-    } catch (e) {
-      return { err: e.message, ms: performance.now() - t0 };
-    }
-  });
+    });
+  } catch (e) {
+    evaluateClick = { err: e.message };
+  }
 
-  const memAfterComparison = await page.evaluate(() => {
+  const memAfterEvaluate = await page.evaluate(() => {
     if (typeof tf !== 'undefined' && tf.memory) return tf.memory().numTensors;
     return null;
   });
 
-  // Repeat the sweep and comparison: neither must leak tensors.
-  const repeatSweep = await page.evaluate(() => {
+  // Derived views so the rest of the report (cross-check, exports) keeps working.
+  const sweep = evaluateClick && !evaluateClick.err
+    ? {
+        ms: evaluateClick.ms,
+        best: (function () {
+          let best = null; let bestRecall = -Infinity;
+          for (const row of evaluateClick.sweep || []) {
+            if (Number.isFinite(row.recall) && row.recall > bestRecall) { bestRecall = row.recall; best = row.alpha; }
+          }
+          return best;
+        })(),
+        note: "",
+        rows: evaluateClick.sweep || [],
+      }
+    : { err: evaluateClick ? evaluateClick.err : "evaluate click failed" };
+  const comparison = evaluateClick && !evaluateClick.err
+    ? { ms: evaluateClick.ms, rows: evaluateClick.rows || [] }
+    : { err: evaluateClick ? evaluateClick.err : "evaluate click failed" };
+  const sliderSet = evaluateClick && !evaluateClick.err
+    ? { value: evaluateClick.sliderValue, readout: evaluateClick.sliderReadout }
+    : { err: evaluateClick ? evaluateClick.err : "evaluate click failed" };
+
+  // MF_INFO after Evaluate (the handler loads MF on first need).
+  const mfLoad = await page.evaluate(() => {
     try {
-      const t0 = performance.now();
-      const r = hw6RunAlphaSweep();
-      return { ms: performance.now() - t0, best: r.best };
+      return {
+        checkpoint: MF_INFO.checkpoint,
+        factors: MF_INFO.factors,
+        source: MF_INFO.source,
+        validationRMSE: MF_INFO.validationRMSE,
+      };
     } catch (e) {
       return { err: e.message };
     }
   });
-  const repeatComparison = await page.evaluate(async () => {
+
+
+  // Repeat the Evaluate click: it must not leak tensors and must keep the same
+  // selected alpha.
+  const repeatSweep = await page.evaluate(async () => {
     try {
       const t0 = performance.now();
-      await hw6RunComparison("test");
-      return { ms: performance.now() - t0 };
+      const btn = document.getElementById("recall-btn");
+      if (btn) btn.click();
+      const deadline = t0 + 600000;
+      while (performance.now() < deadline) {
+        const rows = (typeof HW6_STATE !== "undefined" && HW6_STATE.comparisonRows) || null;
+        if (rows && rows.length >= 4) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      const slider = document.getElementById("alpha");
+      return { ms: performance.now() - t0, best: slider ? Number(slider.value) : null };
     } catch (e) {
       return { err: e.message };
     }
@@ -663,23 +675,29 @@ async function main() {
       `corrupted titles present in recommendations.csv: ${corruptedInSubmission.count} (of ${corruptedInSubmission.movieCount} rows)` +
       (corruptedInSubmission.hits.length ? "\n" + corruptedInSubmission.hits.map((h) => `  movieId ${h.movieId}: ${h.title}`).join("\n") : ""),
     "",
+    "=== PRIMARY FLOW: only \"Evaluate Recall@10\" clicked after Build graph ===",
+    evaluateClick && evaluateClick.err ? `error: ${evaluateClick.err}` :
+      `selected alpha on slider: ${evaluateClick.sliderValue} (readout ${evaluateClick.sliderReadout})\n` +
+      `validation sweep (inside Evaluate): ${(evaluateClick.sweep || []).map((r) => r.alpha + "=" + r.recall).join(", ")}\n` +
+      `status: ${evaluateClick.status}\n` +
+      `test comparison rows:\n` + (evaluateClick.rows || []).map((r) => "  " + JSON.stringify(r)).join("\n"),
+    "",
     "=== Timings (ms) ===",
     `page load -> dataset/split ready: ${pageLoadToReadyMs === null ? "-" : pageLoadToReadyMs}`,
     `Build graph: ${buildGraphMs === null ? "-" : buildGraphMs.toFixed(1)}`,
     `Run tests: ${runTestsMs === null ? "-" : runTestsMs.toFixed(1)}`,
-    `alpha sweep (4 alphas): ${sweep.ms === undefined ? "-" : sweep.ms.toFixed(1)}`,
-    `MF load (hw6EnsureMfForNeed, cold): ${mfLoad.ms === undefined ? "-" : mfLoad.ms.toFixed(1)}${mfLoad.note ? " (" + mfLoad.note + ")" : ""}`,
-    `Evaluate comparison (MF already loaded): ${comparison.ms === undefined ? "-" : comparison.ms.toFixed(1)}`,
-    `repeat sweep: ${repeatSweep.ms === undefined ? "-" : repeatSweep.ms.toFixed(1)}`,
-    `repeat comparison: ${repeatComparison.ms === undefined ? "-" : repeatComparison.ms.toFixed(1)}`,
+    `Evaluate click (sweep -> slider -> test -> recall): ${evaluateClick && evaluateClick.ms !== undefined ? evaluateClick.ms.toFixed(1) : "-"}`,
+    `repeat Evaluate click: ${repeatSweep.ms === undefined ? "-" : repeatSweep.ms.toFixed(1)}`,
     "",
     "=== Tensor counts (tf.memory().numTensors) ===",
     `after two pageRank(0.85): ${memAfter}`,
     `after Run tests: ${memAfterRunTests}`,
     `after second Run tests: ${memAfterRunTests2}`,
-    `after alpha sweep: ${memAfterSweep}`,
-    `after Evaluate comparison (MF loaded): ${memAfterComparison}`,
-    `after repeat sweep + repeat comparison: ${memAfterRepeat}`,
+    `after Evaluate click (MF loaded): ${memAfterEvaluate}`,
+    `after repeat Evaluate click: ${memAfterRepeat}`,
+    "",
+    "=== MF model after Evaluate ===",
+    JSON.stringify(mfLoad),
     "",
     "=== Convergence by alpha (pageRank and PPR user 1) ===",
     ...(convergenceByAlpha.pageRank || []).map((r) => `pageRank alpha ${r.alpha}: ${r.error ? "error=" + r.error : "iterations=" + r.iterations + " residual=" + r.residual + " converged=" + r.converged}`),

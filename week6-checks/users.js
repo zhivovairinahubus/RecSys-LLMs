@@ -291,6 +291,17 @@ function popularityMap(idx) {
   return map;
 }
 
+/**
+ * Popularity by train rating COUNT (any rating, as in HW5) — not the readme 7.3
+ * definition (distinct users with rating >= 4). Used only as a secondary
+ * evidence variant in this report; the page's `popularity` method is unchanged.
+ */
+function ratingCountPopularityMap(idx, trainCountByMovie) {
+  const map = new Map();
+  for (const movieId of idx.candidateIds) map.set(movieId, trainCountByMovie.get(movieId) || 0);
+  return map;
+}
+
 function pagerankMap(graph) {
   return movieScoreMap(propagate(graph, ALPHA, null).p, graph);
 }
@@ -457,8 +468,37 @@ function main() {
   }
   out.push("");
 
-  // ---- 2. Mean per-user overlap BETWEEN methods ---------------------------
-  out.push("=== Mean number of common movies in ONE user's Top-10, between methods ===");
+  // ---- 1b. Secondary popularity: by train rating count (HW5 style) --------
+  // The page's `popularity` method uses readme 7.3 (distinct users with >= 4).
+  // This variant ranks by the number of train ratings (any value), as in HW5,
+  // and reports the same metrics on the same cohort plus per-user hits for the
+  // two displayed users.
+  out.push("=== Popularity by train rating COUNT (HW5 style, secondary evidence) ===");
+  {
+    const countMap = ratingCountPopularityMap(idx, trainCountByMovie);
+    const r = evaluateCohort(() => countMap, idx, testCohort, "test", K, trainCountByMovie);
+    out.push(
+      `popularity_by_count ${r.recall.toFixed(6)}   ${(r.conversion * 100).toFixed(1).padStart(5)}%   ` +
+      `${String(r.catalog.size).padStart(6)}   meanTrainRatings=${r.meanPopularity.toFixed(2)}   ${r.slots} slots`,
+    );
+    const u1c = testCohort[0];
+    const u2c = testCohort[1];
+    for (const [n, uid] of [[1, u1c], [2, u2c]]) {
+      const grades = idx.gradesBySplit.test.get(uid);
+      const excluded = exclusionSet(idx, "test", uid);
+      const relevantSet = new Set();
+      if (grades) for (const [movieId, rating] of grades) {
+        if (rating >= POSITIVE && idx.candidateSet.has(movieId) && !excluded.has(movieId)) relevantSet.add(movieId);
+      }
+      const recs = recommendTopK(countMap, idx, uid, "test", K);
+      let hits = 0;
+      for (const rec of recs) if (relevantSet.has(rec.movieId)) hits++;
+      out.push(`  user ${n} (id ${uid}): hits in Top-10 = ${hits} / ${relevantSet.size} relevant`);
+    }
+  }
+  out.push("");
+
+
   out.push("(averaged over the " + testCohort.length + " cohort users)");
   const pairOverlap = (recA, recB) => {
     let sum = 0;
