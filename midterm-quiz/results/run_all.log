@@ -1,0 +1,295 @@
+content attributes for 9,671 shows loaded in 2.141s
+  consistency (shows with attribute, inconsistent across airings):
+    tv_show_category       9671     0
+    tv_show_genre_1        9440    80
+    tv_show_genre_2        5805    80
+    tv_show_genre_3        2168    16
+    year_of_production     9657    11
+    director               9488    48
+    actors                 9524   174
+
+window: 11-20 -> 21-30
+  history scope: all, interaction screen_time >= 0.5
+  candidate pool: 6,376 shows
+  eligible submission users with exactly 5 truth shows: 1,150
+  interactions: 199,042
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+  assoc  thr=0.5, sup=0.005, conf=0.1, score=confidence                   0.268557    923/1150   0.6769      10    0.127    0.093    0.338
+  assoc  thr=0.5, sup=0.005, conf=0.1, score=confidence_lift              0.289696    981/1150   0.7096      53    0.121    0.079    0.316
+  assoc  thr=0.5, sup=0.005, conf=0.2, score=confidence                   0.268557    923/1150   0.6769      10    0.122    0.063    0.314
+  assoc  thr=0.5, sup=0.005, conf=0.2, score=confidence_lift              0.289403    979/1150   0.7087      51    0.123    0.064    0.302
+  assoc  thr=0.5, sup=0.01, conf=0.1, score=confidence                    0.267197    924/1150   0.6741      10    0.109    0.067    0.310
+  assoc  thr=0.5, sup=0.01, conf=0.1, score=confidence_lift               0.284983    973/1150   0.6991      46    0.114    0.071    0.302
+  assoc  thr=0.5, sup=0.01, conf=0.2, score=confidence                    0.267197    924/1150   0.6741      10    0.111    0.061    0.304
+  assoc  thr=0.5, sup=0.01, conf=0.2, score=confidence_lift               0.284658    970/1150   0.6981      45    0.109    0.060    0.283
+  assoc  thr=0.5, sup=0.02, conf=0.1, score=confidence                    0.267322    928/1150   0.6744      10    0.098    0.061    0.287
+  assoc  thr=0.5, sup=0.02, conf=0.1, score=confidence_lift               0.285951    980/1150   0.6950      38    0.127    0.138    0.386
+  assoc  thr=0.5, sup=0.02, conf=0.2, score=confidence                    0.267322    928/1150   0.6744      10    0.097    0.051    0.262
+  assoc  thr=0.5, sup=0.02, conf=0.2, score=confidence_lift               0.284617    976/1150   0.6941      38    0.098    0.051    0.277
+  assoc  thr=0.5, sup=0.03, conf=0.1, score=confidence                    0.266386    933/1150   0.6739      11    0.092    0.059    0.267
+  assoc  thr=0.5, sup=0.03, conf=0.1, score=confidence_lift               0.284516    986/1150   0.6923      29    0.090    0.054    0.272
+  assoc  thr=0.5, sup=0.03, conf=0.2, score=confidence                    0.266386    933/1150   0.6739      11    0.087    0.049    0.250
+  assoc  thr=0.5, sup=0.03, conf=0.2, score=confidence_lift               0.284319    988/1150   0.6920      28    0.090    0.048    0.268
+  assoc  thr=0.5, sup=0.05, conf=0.1, score=confidence                    0.263925    933/1150   0.6732      12    0.084    0.047    0.248
+  assoc  thr=0.5, sup=0.05, conf=0.1, score=confidence_lift               0.281901    983/1150   0.6873      27    0.085    0.052    0.267
+  assoc  thr=0.5, sup=0.05, conf=0.2, score=confidence                    0.263925    933/1150   0.6732      12    0.087    0.045    0.247
+  assoc  thr=0.5, sup=0.05, conf=0.2, score=confidence_lift               0.281794    983/1150   0.6864      27    0.084    0.048    0.245
+
+window: 11-20 -> 21-30
+  history scope: pool, interaction screen_time >= 0.8
+  candidate pool: 6,376 shows
+  eligible submission users with exactly 5 truth shows: 1,150
+  interactions: 100,891
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+  assoc  thr=0.8, sup=0.005, conf=0.1, score=confidence                   0.263748    939/1150   0.6757      12    0.044    0.055    0.225
+  assoc  thr=0.8, sup=0.005, conf=0.1, score=confidence_lift              0.295472   1004/1150   0.7129      78    0.043    0.056    0.216
+  assoc  thr=0.8, sup=0.005, conf=0.2, score=confidence                   0.263748    939/1150   0.6757      12    0.044    0.050    0.222
+  assoc  thr=0.8, sup=0.005, conf=0.2, score=confidence_lift              0.295693   1003/1150   0.7134      72    0.044    0.053    0.213
+  assoc  thr=0.8, sup=0.01, conf=0.1, score=confidence                    0.263751    945/1150   0.6746      15    0.038    0.051    0.215
+  assoc  thr=0.8, sup=0.01, conf=0.1, score=confidence_lift               0.296565   1011/1150   0.7115      49    0.037    0.056    0.212
+  assoc  thr=0.8, sup=0.01, conf=0.2, score=confidence                    0.263716    944/1150   0.6744      14    0.039    0.048    0.218
+  assoc  thr=0.8, sup=0.01, conf=0.2, score=confidence_lift               0.297093   1012/1150   0.7099      47    0.038    0.050    0.207
+  assoc  thr=0.8, sup=0.02, conf=0.1, score=confidence                    0.264171    958/1150   0.6711      15    0.031    0.051    0.198
+  assoc  thr=0.8, sup=0.02, conf=0.1, score=confidence_lift               0.296359   1011/1150   0.7017      35    0.031    0.050    0.209
+  assoc  thr=0.8, sup=0.02, conf=0.2, score=confidence                    0.264171    958/1150   0.6711      15    0.030    0.045    0.191
+  assoc  thr=0.8, sup=0.02, conf=0.2, score=confidence_lift               0.297012   1013/1150   0.7009      35    0.029    0.044    0.200
+  assoc  thr=0.8, sup=0.03, conf=0.1, score=confidence                    0.263209    958/1150   0.6715      16    0.028    0.046    0.190
+  assoc  thr=0.8, sup=0.03, conf=0.1, score=confidence_lift               0.293255   1002/1150   0.6946      32    0.029    0.049    0.207
+  assoc  thr=0.8, sup=0.03, conf=0.2, score=confidence                    0.263209    958/1150   0.6715      16    0.028    0.044    0.189
+  assoc  thr=0.8, sup=0.03, conf=0.2, score=confidence_lift               0.292899   1001/1150   0.6937      32    0.029    0.045    0.201
+  assoc  thr=0.8, sup=0.05, conf=0.1, score=confidence                    0.259713    937/1150   0.6640      11    0.028    0.048    0.188
+  assoc  thr=0.8, sup=0.05, conf=0.1, score=confidence_lift               0.283058    988/1150   0.6837      25    0.027    0.047    0.190
+  assoc  thr=0.8, sup=0.05, conf=0.2, score=confidence                    0.259713    937/1150   0.6640      11    0.028    0.044    0.198
+  assoc  thr=0.8, sup=0.05, conf=0.2, score=confidence_lift               0.282930    987/1150   0.6845      25    0.028    0.044    0.187
+
+window: 11-20 -> 21-30
+  history scope: all, interaction screen_time >= 0.5
+  candidate pool: 6,376 shows
+  eligible submission users with exactly 5 truth shows: 1,150
+  interactions: 199,042
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+  pprfin hist=all, thr=0.5, restart=0.15, decay=1, beta=0, weights=frequency 0.361814   1062/1150   0.7647     108    0.135   12.565   12.815  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=1, beta=0.25, weights=frequency 0.364333   1064/1150   0.7605     115    0.135   12.805   13.068  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=1, beta=0.5, weights=frequency 0.365806   1066/1150   0.7595     123    0.135   13.354   13.602  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=1, beta=1, weights=frequency 0.367638   1064/1150   0.7661     173    0.135   12.823   13.088  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.3, decay=1, beta=0, weights=frequency 0.388942   1062/1150   0.8859     172    0.135   13.539   13.785  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=1, beta=0.25, weights=frequency 0.395301   1063/1150   0.8816     207    0.135   12.791   13.043  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=1, beta=0.5, weights=frequency 0.397768   1062/1150   0.8769     243    0.135   12.825   13.087  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=1, beta=1, weights=frequency 0.388299   1058/1150   0.8677     300    0.135   13.091   13.337  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.5, decay=1, beta=0, weights=frequency 0.387832   1051/1150   0.9243     215    0.135   11.831   12.093  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=1, beta=0.25, weights=frequency 0.393928   1048/1150   0.9214     291    0.135   12.005   12.255  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=1, beta=0.5, weights=frequency 0.396371   1046/1150   0.9146     319    0.135   11.916   12.180  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=1, beta=1, weights=frequency 0.383096   1044/1150   0.8870     382    0.135   12.064   12.313  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.9, beta=0, weights=frequency 0.364809   1064/1150   0.7612     112    0.125   12.273   12.526  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.9, beta=0.25, weights=frequency 0.366988   1068/1150   0.7570     114    0.125   12.650   12.891  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.9, beta=0.5, weights=frequency 0.368449   1068/1150   0.7555     124    0.125   12.139   12.393  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.9, beta=1, weights=frequency 0.367719   1065/1150   0.7600     173    0.125   12.858   13.098  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0, weights=frequency 0.392635   1062/1150   0.8763     208    0.125   12.101   12.356  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.25, weights=frequency 0.397270   1062/1150   0.8722     225    0.125   12.776   13.015  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5, weights=frequency 0.397968   1062/1150   0.8715     259    0.125   12.085   12.340  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.9, beta=1, weights=frequency 0.390006   1054/1150   0.8647     313    0.125   12.042   12.284  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.9, beta=0, weights=frequency 0.387441   1047/1150   0.9174     286    0.125   11.844   12.086  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.9, beta=0.25, weights=frequency 0.393583   1046/1150   0.9153     320    0.125   11.812   12.063  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.9, beta=0.5, weights=frequency 0.395707   1044/1150   0.9083     361    0.125   12.125   12.366  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.9, beta=1, weights=frequency 0.383171   1043/1150   0.8871     401    0.125   11.775   12.026  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.8, beta=0, weights=frequency 0.364180   1067/1150   0.7557     126    0.130   12.682   12.938  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.8, beta=0.25, weights=frequency 0.367455   1069/1150   0.7539     128    0.130   12.379   12.622  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.8, beta=0.5, weights=frequency 0.369012   1070/1150   0.7511     134    0.130   12.166   12.409  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.15, decay=0.8, beta=1, weights=frequency 0.368519   1071/1150   0.7557     186    0.130   11.752   12.003  iter=30.0/30 res=1.5e-02
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.8, beta=0, weights=frequency 0.390820   1061/1150   0.8670     232    0.130   11.752   11.992  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.8, beta=0.25, weights=frequency 0.395730   1063/1150   0.8637     256    0.130   11.813   12.066  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.8, beta=0.5, weights=frequency 0.395658   1060/1150   0.8605     285    0.130   11.944   12.185  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.3, decay=0.8, beta=1, weights=frequency 0.386986   1054/1150   0.8569     319    0.130   12.123   12.381  iter=30.0/30 res=4.5e-05
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.8, beta=0, weights=frequency 0.383986   1041/1150   0.9068     321    0.130   11.188   11.430  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.8, beta=0.25, weights=frequency 0.389159   1043/1150   0.9043     372    0.130   11.337   11.592  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.8, beta=0.5, weights=frequency 0.390516   1045/1150   0.8983     380    0.130   11.516   11.759  iter=28.0/28 res=7.5e-09
+  pprfin hist=all, thr=0.5, restart=0.5, decay=0.8, beta=1, weights=frequency 0.378603   1037/1150   0.8805     415    0.130   11.191   11.431  iter=28.0/28 res=7.5e-09
+
+window: 11-20 -> 21-30
+  history scope: pool, interaction screen_time >= 0.8
+  candidate pool: 6,376 shows
+  eligible submission users with exactly 5 truth shows: 1,150
+  interactions: 100,891
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=1, beta=0, weights=frequency 0.359670   1062/1150   0.7920     131    0.121    6.494    6.728  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=1, beta=0.25, weights=frequency 0.364122   1066/1150   0.7864     147    0.121    6.690    6.935  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=1, beta=0.5, weights=frequency 0.366890   1068/1150   0.7859     162    0.121    6.788    7.023  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=1, beta=1, weights=frequency 0.365455   1064/1150   0.7984     212    0.121    6.651    6.900  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=1, beta=0, weights=frequency 0.383588   1056/1150   0.9315     202    0.121    6.601    6.833  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=1, beta=0.25, weights=frequency 0.389870   1056/1150   0.9264     260    0.121    6.411    6.659  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=1, beta=0.5, weights=frequency 0.391835   1056/1150   0.9278     293    0.121    6.579    6.811  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=1, beta=1, weights=frequency 0.382948   1056/1150   0.9360     364    0.121    6.471    6.704  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=1, beta=0, weights=frequency 0.379864   1053/1150   0.9762     242    0.121    6.258    6.502  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=1, beta=0.25, weights=frequency 0.386658   1051/1150   0.9769     344    0.121    6.082    6.314  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=1, beta=0.5, weights=frequency 0.387325   1049/1150   0.9770     380    0.121    6.033    6.276  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=1, beta=1, weights=frequency 0.371522   1039/1150   0.9770     454    0.121    6.093    6.326  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.9, beta=0, weights=frequency 0.362757   1067/1150   0.7824     143    0.122    6.493    6.729  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.9, beta=0.25, weights=frequency 0.366241   1072/1150   0.7788     155    0.122    6.737    6.972  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.9, beta=0.5, weights=frequency 0.367991   1069/1150   0.7800     171    0.122    6.643    6.878  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.9, beta=1, weights=frequency 0.366925   1067/1150   0.7930     217    0.122    6.797    7.030  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.9, beta=0, weights=frequency 0.385301   1059/1150   0.9195     270    0.122    6.576    6.821  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.9, beta=0.25, weights=frequency 0.391606   1058/1150   0.9179     300    0.122    6.534    6.768  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.9, beta=0.5, weights=frequency 0.393020   1060/1150   0.9177     320    0.122    6.671    6.918  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.9, beta=1, weights=frequency 0.385064   1059/1150   0.9252     382    0.122    6.592    6.827  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.9, beta=0, weights=frequency 0.380203   1055/1150   0.9737     351    0.122    6.405    6.653  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.9, beta=0.25, weights=frequency 0.385099   1049/1150   0.9746     394    0.122    6.122    6.355  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.9, beta=0.5, weights=frequency 0.387281   1050/1150   0.9746     417    0.122    6.132    6.367  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.9, beta=1, weights=frequency 0.373594   1043/1150   0.9743     472    0.122    6.562    6.807  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.8, beta=0, weights=frequency 0.361032   1069/1150   0.7788     166    0.114    7.046    7.284  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.8, beta=0.25, weights=frequency 0.365348   1069/1150   0.7772     177    0.114    7.196    7.421  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.8, beta=0.5, weights=frequency 0.367426   1070/1150   0.7786     188    0.114    6.562    6.802  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.15, decay=0.8, beta=1, weights=frequency 0.365012   1067/1150   0.7883     233    0.114    6.645    6.871  iter=30.0/30 res=1.5e-02
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.8, beta=0, weights=frequency 0.384072   1056/1150   0.9117     308    0.114    6.896    7.140  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.8, beta=0.25, weights=frequency 0.389357   1059/1150   0.9087     327    0.114    6.918    7.145  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.8, beta=0.5, weights=frequency 0.391893   1060/1150   0.9101     348    0.114    7.331    7.558  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.3, decay=0.8, beta=1, weights=frequency 0.382591   1061/1150   0.9158     389    0.114    7.392    7.632  iter=30.0/30 res=4.5e-05
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.8, beta=0, weights=frequency 0.376238   1048/1150   0.9699     389    0.114    6.807    7.033  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.8, beta=0.25, weights=frequency 0.380530   1047/1150   0.9704     431    0.114    6.716    6.954  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.8, beta=0.5, weights=frequency 0.383223   1047/1150   0.9710     446    0.114    6.095    6.321  iter=28.0/28 res=7.5e-09
+  pprfin hist=pool, thr=0.8, restart=0.5, decay=0.8, beta=1, weights=frequency 0.369272   1039/1150   0.9708     492    0.114    6.619    6.859  iter=28.0/28 res=7.5e-09
+
+  pop    N=2                                                              0.290052    920/1150   0.6720       5    0.000    0.020    0.132
+  pop    N=4                                                              0.290052    920/1150   0.6720       5    0.000    0.024    0.150
+  pop    N=6                                                              0.263652    919/1150   0.6777       5    0.000    0.027    0.140
+  pop    N=10                                                             0.257174    919/1150   0.6777       5    0.000    0.033    0.145
+  pers   screen>=0.8, fallback_N=2                                        0.364925   1042/1150   0.9798     381    0.000    0.133    0.246
+  pers   screen>=0.5, fallback_N=2                                        0.373125   1044/1150   0.9572     329    0.000    0.178    0.290
+
+best on 11-20 -> 21-30:
+  assoc:     thr=0.8, sup=0.01, conf=0.2, score=confidence_lift (MAP@5=0.297093)
+  ppr plain: hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0, weights=frequency (MAP@5=0.392635)
+  ppr best:  hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5, weights=frequency (MAP@5=0.397968)
+  content thr=0.5, profile=frequency, feat=binary                          0.130797    721/1150   0.3525     362    0.117    0.395    0.635
+  content thr=0.5, profile=frequency, feat=idf                             0.218446    964/1150   0.5391     229    0.119    0.480    0.711
+  content thr=0.5, profile=binary, feat=binary                             0.008441     77/1150   0.1329     541    0.114    0.380    0.619
+  content thr=0.5, profile=binary, feat=idf                                0.037035    332/1150   0.3223     312    0.117    0.500    0.729
+  content thr=0.8, profile=frequency, feat=binary                          0.164994    834/1150   0.4247     347    0.103    0.357    0.585
+  content thr=0.8, profile=frequency, feat=idf                             0.231638    980/1150   0.5737     262    0.102    0.466    0.683
+  content thr=0.8, profile=binary, feat=binary                             0.024852    221/1150   0.2934     530    0.116    0.357    0.585
+  content thr=0.8, profile=binary, feat=idf                                0.074406    551/1150   0.5002     304    0.104    0.477    0.695
+  als    hist=pool, thr=0.8, f=64, reg=1, conf_alpha=0.25, seeds=3        0.196512±0.000487    887/1150   0.9595     120    1.928    0.337    2.265
+  als    hist=pool, thr=0.8, f=64, reg=1, conf_alpha=0.5, seeds=3         0.191274±0.002172    885/1150   0.9612     128    1.918    0.318    2.236
+  als    hist=pool, thr=0.8, f=64, reg=1, conf_alpha=1, seeds=3           0.188272±0.001779    897/1150   0.9588     123    1.912    0.318    2.229
+  als    hist=pool, thr=0.8, f=64, reg=1, conf_alpha=2, seeds=3           0.190046±0.001844    899/1150   0.9562     142    1.915    0.320    2.235
+  als    hist=pool, thr=0.8, f=64, reg=1, conf_alpha=5, seeds=3           0.196389±0.000975    907/1150   0.9037     177    1.920    0.320    2.240
+  als    hist=pool, thr=0.8, f=64, reg=3, conf_alpha=0.25, seeds=3        0.257197±0.001499    973/1150   0.9591     113    1.913    0.319    2.232
+  als    hist=pool, thr=0.8, f=64, reg=3, conf_alpha=0.5, seeds=3         0.239918±0.001678    951/1150   0.9605     122    1.911    0.320    2.232
+  als    hist=pool, thr=0.8, f=64, reg=3, conf_alpha=1, seeds=3           0.216018±0.001857    927/1150   0.9624     127    1.913    0.320    2.233
+  als    hist=pool, thr=0.8, f=64, reg=3, conf_alpha=2, seeds=3           0.203809±0.001489    908/1150   0.9550     139    1.924    0.329    2.253
+  als    hist=pool, thr=0.8, f=64, reg=3, conf_alpha=5, seeds=3           0.199168±0.000948    913/1150   0.9054     169    1.922    0.319    2.241
+  als    hist=pool, thr=0.8, f=64, reg=10, conf_alpha=0.25, seeds=3       0.339547±0.001261   1030/1150   0.9576     102    1.915    0.317    2.233
+  als    hist=pool, thr=0.8, f=64, reg=10, conf_alpha=0.5, seeds=3        0.328311±0.000929   1024/1150   0.9598     114    1.915    0.316    2.231
+  als    hist=pool, thr=0.8, f=64, reg=10, conf_alpha=1, seeds=3          0.302640±0.000516   1007/1150   0.9616     122    1.916    0.318    2.233
+  als    hist=pool, thr=0.8, f=64, reg=10, conf_alpha=2, seeds=3          0.258423±0.002667    974/1150   0.9610     133    1.915    0.319    2.234
+  als    hist=pool, thr=0.8, f=64, reg=10, conf_alpha=5, seeds=3          0.219846±0.001002    921/1150   0.9247     158    1.916    0.319    2.235
+  als    hist=pool, thr=0.8, f=64, reg=30, conf_alpha=0.25, seeds=3       0.342071±0.000121   1028/1150   0.8838      55    1.911    0.314    2.225
+  als    hist=pool, thr=0.8, f=64, reg=30, conf_alpha=0.5, seeds=3        0.345407±0.000136   1030/1150   0.9212      70    1.915    0.315    2.230
+  als    hist=pool, thr=0.8, f=64, reg=30, conf_alpha=1, seeds=3          0.348057±0.000415   1031/1150   0.9466      86    1.914    0.314    2.228
+  als    hist=pool, thr=0.8, f=64, reg=30, conf_alpha=2, seeds=3          0.335386±0.000826   1031/1150   0.9567     109    1.915    0.315    2.230
+  als    hist=pool, thr=0.8, f=64, reg=30, conf_alpha=5, seeds=3          0.276317±0.000988    991/1150   0.9563     137    1.921    0.317    2.238
+  als    hist=pool, thr=0.8, f=64, reg=100, conf_alpha=0.25, seeds=3      0.315423±0.000057   1016/1150   0.7054      10    1.916    0.283    2.199
+  als    hist=pool, thr=0.8, f=64, reg=100, conf_alpha=0.5, seeds=3       0.325148±0.000038   1018/1150   0.7203      14    1.913    0.300    2.213
+  als    hist=pool, thr=0.8, f=64, reg=100, conf_alpha=1, seeds=3         0.332963±0.000257   1022/1150   0.7506      24    1.916    0.308    2.224
+  als    hist=pool, thr=0.8, f=64, reg=100, conf_alpha=2, seeds=3         0.331459±0.000199   1027/1150   0.7763      42    1.912    0.311    2.223
+  als    hist=pool, thr=0.8, f=64, reg=100, conf_alpha=5, seeds=3         0.320476±0.000427   1030/1150   0.8410      74    1.916    0.313    2.228
+  als    hist=pool, thr=0.8, f=128, reg=1, conf_alpha=0.25, seeds=3       0.218165±0.000590    908/1150   0.9717     198    5.279    0.321    5.600
+  als    hist=pool, thr=0.8, f=128, reg=1, conf_alpha=0.5, seeds=3        0.204071±0.001736    894/1150   0.9720     198    5.286    0.322    5.608
+  als    hist=pool, thr=0.8, f=128, reg=1, conf_alpha=1, seeds=3          0.189873±0.001086    880/1150   0.9736     206    5.295    0.320    5.614
+  als    hist=pool, thr=0.8, f=128, reg=1, conf_alpha=2, seeds=3          0.184470±0.000658    876/1150   0.9708     203    5.285    0.319    5.604
+  als    hist=pool, thr=0.8, f=128, reg=1, conf_alpha=5, seeds=3          0.181946±0.000345    877/1150   0.9696     235    5.287    0.321    5.608
+  als    hist=pool, thr=0.8, f=128, reg=3, conf_alpha=0.25, seeds=3       0.308315±0.000340   1002/1150   0.9717     189    5.295    0.320    5.616
+  als    hist=pool, thr=0.8, f=128, reg=3, conf_alpha=0.5, seeds=3        0.289000±0.000684    980/1150   0.9718     187    5.288    0.321    5.609
+  als    hist=pool, thr=0.8, f=128, reg=3, conf_alpha=1, seeds=3          0.254518±0.001980    954/1150   0.9734     199    5.303    0.320    5.622
+  als    hist=pool, thr=0.8, f=128, reg=3, conf_alpha=2, seeds=3          0.215643±0.001154    925/1150   0.9718     195    5.294    0.320    5.614
+  als    hist=pool, thr=0.8, f=128, reg=3, conf_alpha=5, seeds=3          0.195685±0.001135    900/1150   0.9690     223    5.267    0.321    5.588
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.25, seeds=3      0.351220±0.000549   1031/1150   0.9689     143    5.288    0.321    5.609
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.5, seeds=3       0.353809±0.000559   1032/1150   0.9701     153    5.276    0.319    5.595
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=1, seeds=3         0.345662±0.000170   1028/1150   0.9711     164    5.288    0.319    5.607
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=2, seeds=3         0.311018±0.001199   1000/1150   0.9727     182    5.266    0.320    5.586
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=5, seeds=3         0.242116±0.001295    948/1150   0.9675     196    5.357    0.322    5.679
+  als    hist=pool, thr=0.8, f=128, reg=30, conf_alpha=0.25, seeds=3      0.342133±0.000320   1028/1150   0.8847      56    5.282    0.313    5.595
+  als    hist=pool, thr=0.8, f=128, reg=30, conf_alpha=0.5, seeds=3       0.345219±0.000010   1030/1150   0.9221      71    5.283    0.314    5.596
+  als    hist=pool, thr=0.8, f=128, reg=30, conf_alpha=1, seeds=3         0.348501±0.000412   1031/1150   0.9475      89    5.300    0.316    5.615
+  als    hist=pool, thr=0.8, f=128, reg=30, conf_alpha=2, seeds=3         0.348555±0.000648   1035/1150   0.9617     120    5.275    0.318    5.593
+  als    hist=pool, thr=0.8, f=128, reg=30, conf_alpha=5, seeds=3         0.315977±0.002010   1024/1150   0.9703     164    5.278    0.318    5.597
+  als    hist=pool, thr=0.8, f=128, reg=100, conf_alpha=0.25, seeds=3     0.315443±0.000043   1015/1150   0.7057      10    5.271    0.284    5.555
+  als    hist=pool, thr=0.8, f=128, reg=100, conf_alpha=0.5, seeds=3      0.325189±0.000015   1018/1150   0.7203      14    5.281    0.299    5.579
+  als    hist=pool, thr=0.8, f=128, reg=100, conf_alpha=1, seeds=3        0.332933±0.000071   1021/1150   0.7511      24    5.301    0.309    5.610
+  als    hist=pool, thr=0.8, f=128, reg=100, conf_alpha=2, seeds=3        0.331576±0.000146   1025/1150   0.7762      41    5.306    0.312    5.618
+  als    hist=pool, thr=0.8, f=128, reg=100, conf_alpha=5, seeds=3        0.321163±0.000080   1031/1150   0.8419      74    5.293    0.314    5.607
+
+components on 11-20 -> 21-30:
+  ppr_final hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5, weig... 0.397968
+  assoc    thr=0.8, sup=0.01, conf=0.2, score=confidence_lift           0.297093
+  content  thr=0.8, profile=frequency, feat=idf                         0.231638
+  als      hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.5, seeds=3   0.353809
+
+rank fusion (PPR with assoc/content/als) on 11-20 -> 21-30:
+
+  best hybrid: ppr=1.0, assoc=0, content=0, als=0 (MAP@5=0.397968)
+  component comparison:
+    hybrid - ppr      +0.000000 (hybrid 0.397968, ppr 0.397968)
+    hybrid - assoc    +0.100875 (hybrid 0.397968, assoc 0.297093)
+    hybrid - content  +0.166330 (hybrid 0.397968, content 0.231638)
+    hybrid - als      +0.044159 (hybrid 0.397968, als 0.353809)
+
+recheck best on 11-18 -> 19-30:
+window: 11-18 -> 19-30
+  history scope: all, interaction screen_time >= 0.5
+  candidate pool: 7,045 shows
+  eligible submission users with exactly 5 truth shows: 1,199
+  interactions: 150,073
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+window: 11-18 -> 19-30
+  history scope: pool, interaction screen_time >= 0.8
+  candidate pool: 7,045 shows
+  eligible submission users with exactly 5 truth shows: 1,199
+  interactions: 75,368
+  method params                                                              MAP@5      coverage  repeat   shows    train     list    total
+  popularity N=2                                                              0.308346    985/1199   0.6242       5    0.000    0.016    0.114
+  personal_frequency screen>=0.5, fallback_N=2                                        0.381660   1088/1199   0.9376     361    0.000    0.154    0.254
+  ppr_final hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5, weights=frequency 0.414237   1114/1199   0.8379     291    0.118    9.263    9.496
+  ppr_final hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0, weights=frequency 0.407687   1116/1199   0.8494     234    0.117    9.250    9.482
+  assoc  thr=0.8, sup=0.01, conf=0.2, score=confidence_lift               0.321543   1080/1199   0.6599      45    0.022    0.061    0.183
+  content thr=0.8, profile=frequency, feat=idf                             0.239091   1016/1199   0.5496     299    0.099    0.538    0.754
+  als    hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.5, seeds=3       0.375304   1087/1199   0.9525     164    1.591    0.096    1.787
+  hybrid ppr=1.0, assoc=0, content=0, als=0                               0.414237   1114/1199   0.8379     291    0.000    0.000    0.099
+  secondary component comparison:
+    hybrid - ppr      +0.000000 (hybrid 0.414237, ppr 0.414237)
+    hybrid - assoc    +0.092694 (hybrid 0.414237, assoc 0.321543)
+    hybrid - content  +0.175146 (hybrid 0.414237, content 0.239091)
+    hybrid - als      +0.038932 (hybrid 0.414237, als 0.375304)
+
+tie-break sensitivity (MAP@5 over all users with >=1 truth show):
+  method                     main  screen_time       recent      show_id
+  popularity             0.282399     0.293250     0.279391     0.303072
+  personal_frequency     0.359679     0.368553     0.357239     0.375387
+  ppr                    0.384659     0.394783     0.381250     0.402936
+  assoc                  0.287382     0.297673     0.285201     0.304078
+  content                0.225854     0.230455     0.226796     0.234712
+  als                    0.342811     0.352254     0.339599     0.359642
+  hybrid                 0.384659     0.394783     0.381250     0.402936
+  users with >=1 truth show: 1,238
+paired user bootstrap (1000 draws, 95% CI, main tie-break):
+  ppr                - personal_frequency +0.024980 [+0.018842, +0.030763]
+  personal_frequency - popularity         +0.077280 [+0.065060, +0.090409]
+  hybrid             - popularity         +0.102260 [+0.092303, +0.112840]
+  hybrid             - ppr                +0.000000 [+0.000000, +0.000000]
+  hybrid             - assoc              +0.097277 [+0.088627, +0.107377]
+  hybrid             - content            +0.158805 [+0.149773, +0.168853]
+  hybrid             - als                +0.041848 [+0.034108, +0.049322]
+
+final table (best variant per method):
+  method             primary MAP secondary MAP   coverage params
+  popularity            0.290052      0.308346   920/1150 N=2
+  personal_frequency    0.373125      0.381660  1044/1150 screen>=0.5, fallback_N=2
+  assoc                 0.297093      0.321543  1012/1150 thr=0.8, sup=0.01, conf=0.2, score=confidence_lift
+  content               0.231638      0.239091   980/1150 thr=0.8, profile=frequency, feat=idf
+  als                   0.353809      0.375304  1032/1150 hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.5, seeds=3
+  ppr                   0.397968      0.414237  1062/1150 hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5, weights=frequency
+  hybrid (final)        0.397968      0.414237  1062/1150 ppr=1.0, assoc=0, content=0, als=0
+
+full run elapsed: 1040.32s
+real 1041.40
+user 989.53
+sys 50.17

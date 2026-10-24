@@ -1,0 +1,37 @@
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/results/method_summary.csv
+            method                                                     params  map5_primary  map5_secondary  coverage_users_primary  coverage_share_primary  repeat_share_primary  distinct_shows_primary  coverage_users_secondary  coverage_share_secondary  repeat_share_secondary  distinct_shows_secondary  train_seconds  list_seconds  kaggle_public  kaggle_private             submission_file
+        popularity                                                        N=2      0.290052        0.308346                     920                0.800000              0.672000                       5                       985                  0.821518                0.624187                         5       0.000000      0.020529        0.33047         0.32096           01_popularity.csv
+personal_frequency                                  screen>=0.5, fallback_N=2      0.373125        0.381660                    1044                0.907826              0.957217                     329                      1088                  0.907423                0.937615                       361       0.000000      0.179588        0.40568         0.38897   05_personal_frequency.csv
+               als hist=pool, thr=0.8, f=128, reg=10, conf_alpha=0.5, seeds=3      0.353809        0.375304                    1032                0.897391              0.970087                     153                      1087                  0.906589                0.952460                       164       5.668813      0.341683        0.33960         0.32260                  04_als.csv
+               ppr        hist=all, thr=0.5, restart=0.3, decay=0.9, beta=0.5      0.397968        0.414237                    1062                0.923478              0.871478                     259                      1114                  0.929108                0.837865                       291       0.159282     24.920028        0.43574         0.42335 02_final_ppr_decay_beta.csv
+             assoc         thr=0.8, sup=0.01, conf=0.2, score=confidence_lift      0.297093        0.321543                    1012                0.880000              0.709913                      47                      1080                  0.900751                0.659883                        45       0.046418      0.074849            NaN             NaN                            
+           content                       thr=0.8, profile=frequency, feat=idf      0.231638        0.239091                     980                0.852174              0.573739                     262                      1016                  0.847373                0.549625                       299       0.114047      0.501763            NaN             NaN                            
+            hybrid                         ppr=1.0, assoc=0, content=0, als=0      0.397968        0.414237                    1062                0.923478              0.871478                     259                      1114                  0.929108                0.837865                       291       0.000000     24.920028        0.43574         0.42335 02_final_ppr_decay_beta.csv
+             slots                       slots:channel_dow_hour,smooth:5,pure      0.380983        0.381657                    1046                0.909565              0.877913                     227                      1094                  0.912427                0.850876                       282       0.000000     24.920028        0.40497         0.39745           07_slots_pure.csv
+             final               slots:channel_dow_hour,smooth:5,ppr+slots0.5      0.408481        0.418310                    1063                0.924348              0.904348                     226                      1112                  0.927440                0.872727                       258       0.159282     24.920028        0.44048         0.42858      06_final_ppr_slots.csv
+
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/results/weekly_coverage.csv
+ iso_year  iso_week week_start  active_users  watch_hours  airings_screen_ge_0_8  pairs_screen_ge_0_8
+     2020        11 2020-03-09          4587    56911.640                   2750                26189
+     2020        12 2020-03-16          4619    64478.458                   2933                33344
+     2020        13 2020-03-23          4594    67451.102                   3084                34419
+     2020        14 2020-03-30          4553    65144.075                   2931                31464
+     2020        15 2020-04-06          4570    63890.824                   2996                29046
+     2020        16 2020-04-13          4585    61920.136                   2963                28158
+     2020        17 2020-04-20          4547    62310.296                   2880                27214
+     2020        18 2020-04-27          4546    66975.699                   3248                27431
+     2020        19 2020-05-04          4573    86181.646                   3712                43593
+     2020        20 2020-05-11          4127    71927.384                   3798                35876
+     2020        21 2020-05-18          3496    62934.466                   3674                32637
+     2020        22 2020-05-25          3466    61851.318                   3791                32547
+     2020        23 2020-06-01          3325    53164.554                   3834                28367
+     2020        24 2020-06-08          3168    53926.400                   3772                27489
+     2020        25 2020-06-15          2969    29749.373                   2905                13732
+     2020        26 2020-06-22          2326    24651.252                   2552                 9948
+     2020        27 2020-06-29          4075    28146.833                   1717                10933
+     2020        28 2020-07-06          4549    92651.213                   4404                48511
+     2020        29 2020-07-13          4558    93745.228                   4525                49302
+     2020        30 2020-07-20          4483    81232.753                   4169                41560
+real 46.47
+user 41.92
+sys 3.60

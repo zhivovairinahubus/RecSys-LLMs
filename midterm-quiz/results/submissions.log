@@ -1,0 +1,126 @@
+=== data ===
+cache: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/cache/view_airing_pairs_history_labeled_v3.parquet
+mode: loaded from cache
+user-airing pairs: 3,014,129
+users: 4,895
+screen_time >= 0.8: 20.2964% (611,760 pairs)
+elapsed: 0.15s
+real 0.70
+user 0.35
+sys 0.24
+=== final_ppr ===
+convergence check: 30 iter, residual=4.508e-05; max_iter=200 -> 54 iter, residual=8.636e-09; lists changed for 0/1,260 users
+method: final_ppr (PPR all/0.5 restart=0.3, decay=0.9, beta=0.5)
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=all, thr=0.5
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/02_final_ppr_decay_beta.csv
+fallback users: 4
+PPR iterations: mean=30.0, max=30; max residual=4.508e-05
+PPR at original max_iter: max=30, residual=4.508e-05; at max_iter=200: max=54, residual=8.636e-09; changed_users=0
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.78s, generate=73.17s, total=78.97s (cache)
+real 79.41
+user 76.76
+sys 2.58
+=== ppr_plain ===
+method: ppr_plain (PPR all/0.5 restart=0.3, decay=0.9, no beta)
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=all, thr=0.5
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/03_ppr_plain.csv
+fallback users: 4
+PPR iterations: mean=54.0, max=54; max residual=8.636e-09
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.70s, generate=46.61s, total=52.32s (cache)
+real 52.83
+user 51.29
+sys 1.54
+=== personal_frequency ===
+method: personal_frequency (personal frequency >=0.5)
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=pool, thr=0.8
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/05_personal_frequency.csv
+fallback users: 11
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.72s, generate=0.55s, total=6.28s (cache)
+real 6.73
+user 6.28
+sys 0.51
+=== als ===
+method: als (ALS f=128, reg=10, alpha=0.5, seed=42)
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=pool, thr=0.8
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/04_als.csv
+fallback users: 5
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.69s, generate=2.80s, total=8.50s (cache)
+real 8.95
+user 8.51
+sys 0.50
+=== popularity ===
+method: popularity (popularity)
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=pool, thr=0.8
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/01_popularity.csv
+fallback users: 0
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.74s, generate=0.03s, total=5.77s (cache)
+real 6.14
+user 5.85
+sys 0.43
+=== slots ===
+method: slots (PPR + Slots (channel_dow_hour, smooth=5, w=0.5))
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=all, thr=0.5
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/06_final_ppr_slots.csv
+fallback users: 0
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.81s, generate=53.80s, total=59.62s (cache)
+real 60.01
+user 56.25
+sys 3.86
+=== slots_pure ===
+method: slots_pure (Pure Slots (channel_dow_hour, smooth=5))
+history: 11-30, target: 31-42
+candidate pool: 6,632 shows; users: 1,260
+base: hist=all, thr=0.5
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/submissions/07_slots_pure.csv
+fallback users: 0
+validation:
+  header == 'user_id,tv_show_id': True
+  rows == 1,260: True
+  user_id same order: True
+  5 distinct non-zero pool ids per row: True
+timing: data=5.72s, generate=51.12s, total=56.85s (cache)
+real 57.37
+user 56.01
+sys 1.35

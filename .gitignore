@@ -1,3 +1,10 @@
 # HW4: local-only artifacts (NOT part of the course deliverables)
 experiments/
 week4/backup/
+
+# midterm-quiz: raw data and local parquet caches
+midterm-quiz/data/
+midterm-quiz/cache/
+__pycache__/
+**/__pycache__/
+*.pyc

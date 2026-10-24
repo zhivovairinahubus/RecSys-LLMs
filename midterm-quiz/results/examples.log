@@ -1,0 +1,40 @@
+active user 3193355660422450548: 112 history shows (pct=0.951)
+light user  3799694907521863650: 2 history shows (pct=0.010)
+PPR iterations: mean=54.0, max=54, residual=8.636e-09, users_with_fallback=0
+PPR graph built in 0.51s
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/results/examples.csv (70 rows)
+wrote: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/results/hand_check.txt
+fallback slots by method:
+  popularity         3193355660422450548:0, 3799694907521863650:0
+  personal_frequency 3193355660422450548:0, 3799694907521863650:3
+  als                3193355660422450548:0, 3799694907521863650:0
+  ppr                3193355660422450548:0, 3799694907521863650:0
+  rules              3193355660422450548:0, 3799694907521863650:0
+  cbf                3193355660422450548:0, 3799694907521863650:0
+  final              3193355660422450548:0, 3799694907521863650:0
+
+hand check:
+Manual screen-time check
+user_id: 3193355660422450548
+history shows (screen_time >= 0.5): 112
+
+raw view row: 4310613
+  channel=6, start=2020-05-31 19:54:01, stop=2020-05-31 22:11:08, duration=8227s
+
+intersected airing:
+  channel=СТБ, show='Один за всех'. (id=500331, category=Развлечения), start=31.05.2020 20:00:00, duration=7800s
+  overlap_sec=7800, screen_time=1.000000
+
+final AP@5: 0.643333
+final hit positions:
+  rank 1: 2400508 — Сегодня. (truth rank 1)
+  rank 3: 5900256 — Утро с Украиной. (truth rank 3)
+  rank 4: 240081 — Факты. (truth rank 5)
+  rank 5: 2400467 — 'Викна-Новости'. (truth rank 4)
+final misses:
+  rank 2: 2400480 — ТСН.
+truth: 2400508 — Сегодня. | 6700482 — Секретные материалы. | 5900256 — Утро с Украиной. | 2400467 — 'Викна-Новости'. | 240081 — Факты.
+
+real 25.98
+user 24.08
+sys 2.19

@@ -1,0 +1,9 @@
+cache: /Users/ascuv/Documents/RecSys-LLMs/midterm-quiz/cache/view_airing_pairs_history_labeled_v3.parquet
+mode: loaded from cache
+user-airing pairs: 3,014,129
+users: 4,895
+screen_time >= 0.8: 20.2964% (611,760 pairs)
+elapsed: 0.08s
+real 0.35
+user 0.33
+sys 0.17

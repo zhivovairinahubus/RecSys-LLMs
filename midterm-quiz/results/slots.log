@@ -1,0 +1,86 @@
+content attributes for 9,671 shows loaded in 1.967s
+  consistency (shows with attribute, inconsistent across airings):
+    tv_show_category       9671     0
+    tv_show_genre_1        9440    80
+    tv_show_genre_2        5805    80
+    tv_show_genre_3        2168    16
+    year_of_production     9657    11
+    director               9488    48
+    actors                 9524   174
+
+slots: computing PPR matrices...
+slots: primary PPR baseline MAP@5=0.397968
+  slots  slots:channel_dow_hour,smooth:0,ppr+slots0.1                     0.404180   1062/1150   0.8852     250    0.000    0.150    0.279
+  slots  slots:channel_dow_hour,smooth:0,ppr+slots0.2                     0.405930   1062/1150   0.8941     245    0.000    0.145    0.282
+  slots  slots:channel_dow_hour,smooth:0,ppr+slots0.3                     0.407177   1065/1150   0.8988     240    0.000    0.163    0.285
+  slots  slots:channel_dow_hour,smooth:0,ppr+slots0.4                     0.406986   1064/1150   0.9024     235    0.000    0.158    0.313
+  slots  slots:channel_dow_hour,smooth:0,ppr+slots0.5                     0.406467   1064/1150   0.9035     233    0.000    0.157    0.282
+  slots  slots:channel_dow_hour,smooth:1,ppr+slots0.1                     0.403977   1062/1150   0.8849     250    0.000    0.151    0.288
+  slots  slots:channel_dow_hour,smooth:1,ppr+slots0.2                     0.406145   1062/1150   0.8930     242    0.000    0.147    0.269
+  slots  slots:channel_dow_hour,smooth:1,ppr+slots0.3                     0.407864   1065/1150   0.8990     236    0.000    0.149    0.286
+  slots  slots:channel_dow_hour,smooth:1,ppr+slots0.4                     0.407948   1064/1150   0.9024     228    0.000    0.147    0.266
+  slots  slots:channel_dow_hour,smooth:1,ppr+slots0.5                     0.407478   1063/1150   0.9042     226    0.000    0.146    0.265
+  slots  slots:channel_dow_hour,smooth:5,ppr+slots0.1                     0.403507   1062/1150   0.8840     250    0.000    0.153    0.289
+  slots  slots:channel_dow_hour,smooth:5,ppr+slots0.2                     0.405707   1064/1150   0.8923     239    0.000    0.148    0.270
+  slots  slots:channel_dow_hour,smooth:5,ppr+slots0.3                     0.407438   1064/1150   0.8979     235    0.000    0.148    0.293
+  slots  slots:channel_dow_hour,smooth:5,ppr+slots0.4                     0.407890   1063/1150   0.9016     228    0.000    0.149    0.272
+  slots  slots:channel_dow_hour,smooth:5,ppr+slots0.5                     0.408481   1063/1150   0.9043     226    0.000    0.150    0.288
+  slots  slots:channel_hour,smooth:0,ppr+slots0.1                         0.403875   1063/1150   0.8835     252    0.000    0.164    0.282
+  slots  slots:channel_hour,smooth:0,ppr+slots0.2                         0.406093   1065/1150   0.8910     245    0.000    0.155    0.284
+  slots  slots:channel_hour,smooth:0,ppr+slots0.3                         0.407345   1065/1150   0.8939     236    0.000    0.155    0.277
+  slots  slots:channel_hour,smooth:0,ppr+slots0.4                         0.406383   1065/1150   0.8957     231    0.000    0.156    0.271
+  slots  slots:channel_hour,smooth:0,ppr+slots0.5                         0.405701   1066/1150   0.8946     220    0.000    0.153    0.290
+  slots  slots:channel_hour,smooth:1,ppr+slots0.1                         0.404020   1063/1150   0.8835     251    0.000    0.168    0.286
+  slots  slots:channel_hour,smooth:1,ppr+slots0.2                         0.406493   1065/1150   0.8908     245    0.000    0.153    0.284
+  slots  slots:channel_hour,smooth:1,ppr+slots0.3                         0.407467   1064/1150   0.8944     234    0.000    0.151    0.265
+  slots  slots:channel_hour,smooth:1,ppr+slots0.4                         0.406412   1065/1150   0.8960     231    0.000    0.150    0.266
+  slots  slots:channel_hour,smooth:1,ppr+slots0.5                         0.405867   1066/1150   0.8955     219    0.000    0.170    0.283
+  slots  slots:channel_hour,smooth:5,ppr+slots0.1                         0.403684   1063/1150   0.8835     251    0.000    0.161    0.278
+  slots  slots:channel_hour,smooth:5,ppr+slots0.2                         0.406748   1064/1150   0.8906     244    0.000    0.150    0.278
+  slots  slots:channel_hour,smooth:5,ppr+slots0.3                         0.407194   1064/1150   0.8939     233    0.000    0.151    0.262
+  slots  slots:channel_hour,smooth:5,ppr+slots0.4                         0.406777   1064/1150   0.8970     227    0.000    0.151    0.280
+  slots  slots:channel_hour,smooth:5,ppr+slots0.5                         0.406780   1065/1150   0.8950     217    0.000    0.158    0.275
+  slots  slots:channel_weekpart_hour,smooth:0,ppr+slots0.1                0.403180   1062/1150   0.8847     251    0.000    0.158    0.288
+  slots  slots:channel_weekpart_hour,smooth:0,ppr+slots0.2                0.405104   1062/1150   0.8920     247    0.000    0.153    0.272
+  slots  slots:channel_weekpart_hour,smooth:0,ppr+slots0.3                0.407136   1061/1150   0.8953     242    0.000    0.150    0.283
+  slots  slots:channel_weekpart_hour,smooth:0,ppr+slots0.4                0.407238   1062/1150   0.9005     232    0.000    0.151    0.281
+  slots  slots:channel_weekpart_hour,smooth:0,ppr+slots0.5                0.407125   1063/1150   0.9010     223    0.000    0.153    0.280
+  slots  slots:channel_weekpart_hour,smooth:1,ppr+slots0.1                0.403188   1061/1150   0.8849     251    0.000    0.160    0.300
+  slots  slots:channel_weekpart_hour,smooth:1,ppr+slots0.2                0.405449   1062/1150   0.8922     246    0.000    0.157    0.281
+  slots  slots:channel_weekpart_hour,smooth:1,ppr+slots0.3                0.407336   1061/1150   0.8960     240    0.000    0.169    0.308
+  slots  slots:channel_weekpart_hour,smooth:1,ppr+slots0.4                0.407067   1063/1150   0.9005     230    0.000    0.154    0.275
+  slots  slots:channel_weekpart_hour,smooth:1,ppr+slots0.5                0.407322   1062/1150   0.9010     222    0.000    0.152    0.294
+  slots  slots:channel_weekpart_hour,smooth:5,ppr+slots0.1                0.403214   1061/1150   0.8850     253    0.000    0.160    0.282
+  slots  slots:channel_weekpart_hour,smooth:5,ppr+slots0.2                0.405762   1062/1150   0.8923     246    0.000    0.155    0.277
+  slots  slots:channel_weekpart_hour,smooth:5,ppr+slots0.3                0.408116   1062/1150   0.8962     234    0.000    0.177    0.300
+  slots  slots:channel_weekpart_hour,smooth:5,ppr+slots0.4                0.407786   1064/1150   0.8993     228    0.000    0.152    0.273
+  slots  slots:channel_weekpart_hour,smooth:5,ppr+slots0.5                0.407188   1065/1150   0.9014     218    0.000    0.152    0.296
+  slots  slots:channel_dow_2hour,smooth:0,ppr+slots0.1                    0.403780   1059/1150   0.8838     252    0.000    0.155    0.276
+  slots  slots:channel_dow_2hour,smooth:0,ppr+slots0.2                    0.405475   1062/1150   0.8910     242    0.000    0.148    0.289
+  slots  slots:channel_dow_2hour,smooth:0,ppr+slots0.3                    0.407391   1063/1150   0.8960     239    0.000    0.149    0.273
+  slots  slots:channel_dow_2hour,smooth:0,ppr+slots0.4                    0.406864   1064/1150   0.8997     236    0.000    0.150    0.274
+  slots  slots:channel_dow_2hour,smooth:0,ppr+slots0.5                    0.405730   1064/1150   0.8998     228    0.000    0.149    0.290
+  slots  slots:channel_dow_2hour,smooth:1,ppr+slots0.1                    0.403728   1059/1150   0.8838     252    0.000    0.154    0.275
+  slots  slots:channel_dow_2hour,smooth:1,ppr+slots0.2                    0.405751   1063/1150   0.8910     241    0.000    0.149    0.292
+  slots  slots:channel_dow_2hour,smooth:1,ppr+slots0.3                    0.407725   1064/1150   0.8960     238    0.000    0.148    0.268
+  slots  slots:channel_dow_2hour,smooth:1,ppr+slots0.4                    0.407959   1064/1150   0.8998     234    0.000    0.150    0.273
+  slots  slots:channel_dow_2hour,smooth:1,ppr+slots0.5                    0.406272   1062/1150   0.9003     226    0.000    0.150    0.310
+  slots  slots:channel_dow_2hour,smooth:5,ppr+slots0.1                    0.403145   1060/1150   0.8840     250    0.000    0.153    0.275
+  slots  slots:channel_dow_2hour,smooth:5,ppr+slots0.2                    0.405742   1063/1150   0.8906     240    0.000    0.150    0.297
+  slots  slots:channel_dow_2hour,smooth:5,ppr+slots0.3                    0.407177   1065/1150   0.8963     235    0.000    0.148    0.272
+  slots  slots:channel_dow_2hour,smooth:5,ppr+slots0.4                    0.408070   1063/1150   0.8993     229    0.000    0.152    0.272
+  slots  slots:channel_dow_2hour,smooth:5,ppr+slots0.5                    0.407928   1063/1150   0.8993     223    0.000    0.146    0.291
+
+evaluating pure slots (channel_dow_hour, smooth=5)...
+  slots  slots:channel_dow_hour,smooth:5,pure                             0.380983   1046/1150   0.8779     227    0.000    0.000    0.122
+  slots  slots:channel_dow_hour,smooth:5,pure                             0.381657   1094/1199   0.8509     282    0.000    0.000    0.137
+
+best slots: slots:channel_dow_hour,smooth:5,ppr+slots0.5
+  primary MAP@5=0.408481 (final 0.397968, diff +0.010513)
+  bootstrap diff vs final: +0.010513 [+0.006121, +0.014539]
+
+secondary recheck (11-18 -> 19-30):
+  MAP@5=0.418310 (final 0.414237, diff +0.004073)
+  bootstrap diff vs final: +0.004073 [+0.000086, +0.008155]
+
+slots grid elapsed: 142.63s

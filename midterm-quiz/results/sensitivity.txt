@@ -1,0 +1,18 @@
+tie-break sensitivity (MAP@5 over all users with >=1 truth show):
+  method                     main  screen_time       recent      show_id
+  popularity             0.282399     0.293250     0.279391     0.303072
+  personal_frequency     0.359679     0.368553     0.357239     0.375387
+  ppr                    0.384659     0.394783     0.381250     0.402936
+  assoc                  0.287382     0.297673     0.285201     0.304078
+  content                0.225854     0.230455     0.226796     0.234712
+  als                    0.342811     0.352254     0.339599     0.359642
+  hybrid                 0.384659     0.394783     0.381250     0.402936
+  users with >=1 truth show: 1,238
+paired user bootstrap (1000 draws, 95% CI, main tie-break):
+  ppr                - personal_frequency +0.024980 [+0.018842, +0.030763]
+  personal_frequency - popularity         +0.077280 [+0.065060, +0.090409]
+  hybrid             - popularity         +0.102260 [+0.092303, +0.112840]
+  hybrid             - ppr                +0.000000 [+0.000000, +0.000000]
+  hybrid             - assoc              +0.097277 [+0.088627, +0.107377]
+  hybrid             - content            +0.158805 [+0.149773, +0.168853]
+  hybrid             - als                +0.041848 [+0.034108, +0.049322]

@@ -1,0 +1,86 @@
+content attributes for 9,671 shows loaded in 2.021s
+  consistency (shows with attribute, inconsistent across airings):
+    tv_show_category       9671     0
+    tv_show_genre_1        9440    80
+    tv_show_genre_2        5805    80
+    tv_show_genre_3        2168    16
+    year_of_production     9657    11
+    director               9488    48
+    actors                 9524   174
+
+switch components: 12.57s; final baseline MAP@5=0.397968
+  switch hist_shows<=1, ppr=1, assoc=0.25, cbf=0, source=rules            0.397968   1062/1150   0.8715     259    0.000    0.120    0.116
+  switch hist_shows<=1, ppr=1, assoc=0.5, cbf=0, source=rules             0.397968   1062/1150   0.8715     259    0.000    0.135    0.131
+  switch hist_shows<=1, ppr=1, assoc=1, cbf=0, source=rules               0.397968   1062/1150   0.8715     259    0.000    0.117    0.113
+  switch hist_shows<=1, ppr=1, assoc=0, cbf=0.25, source=cbf              0.397968   1062/1150   0.8715     259    0.000    0.116    0.112
+  switch hist_shows<=1, ppr=1, assoc=0, cbf=0.5, source=cbf               0.397968   1062/1150   0.8715     259    0.000    0.130    0.126
+  switch hist_shows<=1, ppr=1, assoc=0, cbf=1, source=cbf                 0.397968   1062/1150   0.8715     261    0.000    0.118    0.114
+  switch hist_shows<=1, ppr=1, assoc=0.25, cbf=0.25, source=both          0.397968   1062/1150   0.8715     259    0.000    0.130    0.126
+  switch hist_shows<=1, ppr=1, assoc=0.25, cbf=0.5, source=both           0.397968   1062/1150   0.8715     259    0.000    0.115    0.112
+  switch hist_shows<=1, ppr=1, assoc=0.25, cbf=1, source=both             0.397968   1062/1150   0.8715     260    0.000    0.132    0.128
+  switch hist_shows<=1, ppr=1, assoc=0.5, cbf=0.25, source=both           0.397968   1062/1150   0.8715     259    0.000    0.119    0.115
+  switch hist_shows<=1, ppr=1, assoc=0.5, cbf=0.5, source=both            0.397968   1062/1150   0.8715     259    0.000    0.116    0.113
+  switch hist_shows<=1, ppr=1, assoc=0.5, cbf=1, source=both              0.397968   1062/1150   0.8715     260    0.000    0.128    0.125
+  switch hist_shows<=1, ppr=1, assoc=1, cbf=0.25, source=both             0.397968   1062/1150   0.8715     259    0.000    0.116    0.113
+  switch hist_shows<=1, ppr=1, assoc=1, cbf=0.5, source=both              0.397968   1062/1150   0.8715     259    0.000    0.132    0.129
+  switch hist_shows<=1, ppr=1, assoc=1, cbf=1, source=both                0.397968   1062/1150   0.8715     259    0.000    0.116    0.113
+  switch hist_shows<=2, ppr=1, assoc=0.25, cbf=0, source=rules            0.397968   1062/1150   0.8715     259    0.000    0.129    0.126
+  switch hist_shows<=2, ppr=1, assoc=0.5, cbf=0, source=rules             0.397968   1062/1150   0.8715     259    0.000    0.116    0.113
+  switch hist_shows<=2, ppr=1, assoc=1, cbf=0, source=rules               0.398012   1063/1150   0.8715     259    0.000    0.117    0.114
+  switch hist_shows<=2, ppr=1, assoc=0, cbf=0.25, source=cbf              0.397968   1062/1150   0.8715     259    0.000    0.129    0.126
+  switch hist_shows<=2, ppr=1, assoc=0, cbf=0.5, source=cbf               0.397968   1062/1150   0.8715     259    0.000    0.115    0.111
+  switch hist_shows<=2, ppr=1, assoc=0, cbf=1, source=cbf                 0.397968   1062/1150   0.8715     261    0.000    0.131    0.127
+  switch hist_shows<=2, ppr=1, assoc=0.25, cbf=0.25, source=both          0.397968   1062/1150   0.8715     259    0.000    0.119    0.115
+  switch hist_shows<=2, ppr=1, assoc=0.25, cbf=0.5, source=both           0.397968   1062/1150   0.8715     259    0.000    0.130    0.127
+  switch hist_shows<=2, ppr=1, assoc=0.25, cbf=1, source=both             0.397968   1062/1150   0.8715     260    0.000    0.115    0.112
+  switch hist_shows<=2, ppr=1, assoc=0.5, cbf=0.25, source=both           0.397968   1062/1150   0.8715     259    0.000    0.115    0.112
+  switch hist_shows<=2, ppr=1, assoc=0.5, cbf=0.5, source=both            0.397968   1062/1150   0.8715     259    0.000    0.130    0.126
+  switch hist_shows<=2, ppr=1, assoc=0.5, cbf=1, source=both              0.397968   1062/1150   0.8715     260    0.000    0.116    0.112
+  switch hist_shows<=2, ppr=1, assoc=1, cbf=0.25, source=both             0.398012   1063/1150   0.8715     259    0.000    0.128    0.124
+  switch hist_shows<=2, ppr=1, assoc=1, cbf=0.5, source=both              0.398012   1063/1150   0.8715     259    0.000    0.116    0.112
+  switch hist_shows<=2, ppr=1, assoc=1, cbf=1, source=both                0.398003   1063/1150   0.8715     259    0.000    0.132    0.128
+  switch hist_shows<=3, ppr=1, assoc=0.25, cbf=0, source=rules            0.397968   1062/1150   0.8715     259    0.000    0.116    0.112
+  switch hist_shows<=3, ppr=1, assoc=0.5, cbf=0, source=rules             0.397968   1062/1150   0.8715     259    0.000    0.131    0.128
+  switch hist_shows<=3, ppr=1, assoc=1, cbf=0, source=rules               0.398012   1063/1150   0.8715     259    0.000    0.115    0.112
+  switch hist_shows<=3, ppr=1, assoc=0, cbf=0.25, source=cbf              0.397968   1062/1150   0.8715     259    0.000    0.119    0.115
+  switch hist_shows<=3, ppr=1, assoc=0, cbf=0.5, source=cbf               0.397968   1062/1150   0.8715     259    0.000    0.130    0.126
+  switch hist_shows<=3, ppr=1, assoc=0, cbf=1, source=cbf                 0.397968   1062/1150   0.8715     261    0.000    0.116    0.112
+  switch hist_shows<=3, ppr=1, assoc=0.25, cbf=0.25, source=both          0.397968   1062/1150   0.8715     259    0.000    0.131    0.127
+  switch hist_shows<=3, ppr=1, assoc=0.25, cbf=0.5, source=both           0.397968   1062/1150   0.8715     259    0.000    0.118    0.114
+  switch hist_shows<=3, ppr=1, assoc=0.25, cbf=1, source=both             0.397968   1062/1150   0.8715     260    0.000    0.131    0.127
+  switch hist_shows<=3, ppr=1, assoc=0.5, cbf=0.25, source=both           0.397968   1062/1150   0.8715     259    0.000    0.114    0.111
+  switch hist_shows<=3, ppr=1, assoc=0.5, cbf=0.5, source=both            0.397968   1062/1150   0.8715     259    0.000    0.116    0.112
+  switch hist_shows<=3, ppr=1, assoc=0.5, cbf=1, source=both              0.397968   1062/1150   0.8715     260    0.000    0.132    0.129
+  switch hist_shows<=3, ppr=1, assoc=1, cbf=0.25, source=both             0.398012   1063/1150   0.8715     259    0.000    0.119    0.116
+  switch hist_shows<=3, ppr=1, assoc=1, cbf=0.5, source=both              0.398012   1063/1150   0.8715     259    0.000    0.131    0.128
+  switch hist_shows<=3, ppr=1, assoc=1, cbf=1, source=both                0.398003   1063/1150   0.8715     259    0.000    0.116    0.112
+  switch hist_shows<=5, ppr=1, assoc=0.25, cbf=0, source=rules            0.398203   1062/1150   0.8715     259    0.000    0.132    0.129
+  switch hist_shows<=5, ppr=1, assoc=0.5, cbf=0, source=rules             0.398203   1062/1150   0.8715     259    0.000    0.118    0.115
+  switch hist_shows<=5, ppr=1, assoc=1, cbf=0, source=rules               0.398290   1065/1150   0.8697     250    0.000    0.115    0.112
+  switch hist_shows<=5, ppr=1, assoc=0, cbf=0.25, source=cbf              0.397919   1062/1150   0.8715     259    0.000    0.128    0.124
+  switch hist_shows<=5, ppr=1, assoc=0, cbf=0.5, source=cbf               0.397919   1062/1150   0.8715     259    0.000    0.117    0.113
+  switch hist_shows<=5, ppr=1, assoc=0, cbf=1, source=cbf                 0.397751   1062/1150   0.8710     263    0.000    0.135    0.131
+  switch hist_shows<=5, ppr=1, assoc=0.25, cbf=0.25, source=both          0.398142   1062/1150   0.8715     259    0.000    0.116    0.113
+  switch hist_shows<=5, ppr=1, assoc=0.25, cbf=0.5, source=both           0.398142   1062/1150   0.8715     259    0.000    0.129    0.126
+  switch hist_shows<=5, ppr=1, assoc=0.25, cbf=1, source=both             0.398128   1062/1150   0.8706     261    0.000    0.116    0.112
+  switch hist_shows<=5, ppr=1, assoc=0.5, cbf=0.25, source=both           0.398171   1062/1150   0.8715     259    0.000    0.119    0.115
+  switch hist_shows<=5, ppr=1, assoc=0.5, cbf=0.5, source=both            0.398229   1062/1150   0.8711     258    0.000    0.127    0.124
+  switch hist_shows<=5, ppr=1, assoc=0.5, cbf=1, source=both              0.398128   1062/1150   0.8706     261    0.000    0.115    0.112
+  switch hist_shows<=5, ppr=1, assoc=1, cbf=0.25, source=both             0.398243   1064/1150   0.8703     254    0.000    0.131    0.127
+  switch hist_shows<=5, ppr=1, assoc=1, cbf=0.5, source=both              0.398243   1064/1150   0.8703     254    0.000    0.119    0.115
+  switch hist_shows<=5, ppr=1, assoc=1, cbf=1, source=both                0.398107   1064/1150   0.8703     255    0.000    0.132    0.128
+
+best switch: hist_shows<=5, ppr=1, assoc=1, cbf=0, source=rules
+  primary MAP@5=0.398290 (final 0.397968, diff +0.000322)
+  affected users (eligible): 21/1,150; changed lists: 12
+  bootstrap diff vs final: +0.000322 [-0.000281, +0.000991]
+
+secondary recheck (11-18 -> 19-30):
+  MAP@5=0.414612 (final 0.414237, diff +0.000375)
+  affected users (eligible): 32/1,199; changed lists: 22
+  bootstrap diff vs final: +0.000375 [-0.000487, +0.001474]
+
+switch grid elapsed: 53.16s
+real 53.59
+user 51.70
+sys 2.06
